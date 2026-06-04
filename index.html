@@ -58,15 +58,29 @@
     .btn-primary   { background: #c0392b; color: #fff; }
     .btn-secondary { background: #1a1a1a; color: #f0f0f0; border: 1px solid #2a2a2a; margin-top: 12px; }
 
-    /* Full-screen camera */
-    #s-camera { padding: 0; position: relative; background: #000; }
-    #preview        { display: none; } /* hidden — canvas is the display */
-    #retro-canvas   { width: 100%; height: 100dvh; object-fit: cover; display: block; }
-    .camera-overlay {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 24px 24px 52px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    /* Camera screen — stacked layout: canvas on top, controls below */
+    #s-camera {
+      padding: 0;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+    #s-camera.active { display: flex; }
+    #preview      { display: none; }
+    #retro-canvas {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      display: block;
+      flex-shrink: 0;
+    }
+    .camera-controls {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 24px 36px;
+      background: #000;
     }
     .timer-bar { height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
     .timer-fill { height: 100%; width: 0%; background: #c0392b; border-radius: 2px; transition: width 0.1s linear; }
@@ -114,7 +128,7 @@
 <div id="s-camera" class="screen">
   <video id="preview" autoplay muted playsinline webkit-playsinline x5-playsinline></video>
   <canvas id="retro-canvas"></canvas>
-  <div class="camera-overlay">
+  <div class="camera-controls">
     <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
     <div class="timer-row">
       <div id="timer-count" class="timer-count">15</div>
@@ -298,8 +312,8 @@
   function startRetroCanvas(videoEl, cameraStream) {
     var canvas = document.getElementById('retro-canvas');
     var ctx    = canvas.getContext('2d');
-    canvas.width  = videoEl.videoWidth  || 720;
-    canvas.height = videoEl.videoHeight || 1280;
+    canvas.width  = 640;
+    canvas.height = 480;
 
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
