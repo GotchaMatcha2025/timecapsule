@@ -317,49 +317,116 @@
 
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
+    var flickerVal = 1;
+
     function drawFrame() {
-      // Center-crop camera feed into square, mirrored for front cam
-      var vw   = videoEl.videoWidth  || canvas.width;
-      var vh   = videoEl.videoHeight || canvas.height;
+      var W = canvas.width, H = canvas.height;
+      var M = W * 0.04; // margin
+      var fs = Math.round(W * 0.048);
+
+      // ── Camera feed (center-crop, mirrored) ──
+      var vw   = videoEl.videoWidth  || W;
+      var vh   = videoEl.videoHeight || H;
       var size = Math.min(vw, vh);
       var sx   = (vw - size) / 2;
       var sy   = (vh - size) / 2;
       ctx.save();
       ctx.scale(-1, 1);
-      ctx.drawImage(videoEl, sx, sy, size, size, -canvas.width, 0, canvas.width, canvas.height);
+      ctx.drawImage(videoEl, sx, sy, size, size, -W, 0, W, H);
       ctx.restore();
 
-      // Green-tinted scanlines
-      ctx.fillStyle = 'rgba(0, 20, 0, 0.15)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      for (var y = 0; y < canvas.height; y += 3) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.fillRect(0, y, canvas.width, 1);
+      // ── Flicker ──
+      if (Math.random() < 0.06) flickerVal = 0.72 + Math.random() * 0.28;
+      else flickerVal += (1 - flickerVal) * 0.18;
+      ctx.fillStyle = 'rgba(0,0,0,' + (1 - flickerVal) * 0.35 + ')';
+      ctx.fillRect(0, 0, W, H);
+
+      // ── Scanlines ──
+      ctx.fillStyle = 'rgba(0,15,0,0.12)';
+      ctx.fillRect(0, 0, W, H);
+      for (var y = 0; y < H; y += 3) {
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fillRect(0, y, W, 1);
       }
 
-      // Slight vignette
-      var vig = ctx.createRadialGradient(
-        canvas.width/2, canvas.height/2, canvas.height * 0.3,
-        canvas.width/2, canvas.height/2, canvas.height * 0.85
-      );
+      // ── Vignette ──
+      var vig = ctx.createRadialGradient(W/2,H/2,H*0.28, W/2,H/2,H*0.82);
       vig.addColorStop(0, 'rgba(0,0,0,0)');
-      vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.6)');
       ctx.fillStyle = vig;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, W, H);
 
-      // Date & time overlay
+      // ── Corner frame brackets ──
+      var arm = W * 0.1, t = 2.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+      ctx.lineWidth   = t;
+      ctx.lineCap     = 'square';
+      [
+        [M,     M,     arm, 0,   0,   arm],
+        [W-M,   M,    -arm, 0,   0,   arm],
+        [M,     H-M,   arm, 0,   0,  -arm],
+        [W-M,   H-M,  -arm, 0,   0,  -arm]
+      ].forEach(function(c) {
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[0]+c[2], c[1]+c[3]);
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[0]+c[4], c[1]+c[5]);
+        ctx.stroke();
+      });
+
+      // ── Centre reticle ──
+      var cx = W/2, cy = H/2, rLen = W*0.07, gap = W*0.035;
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth   = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, W*0.04, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx - rLen, cy); ctx.lineTo(cx - gap, cy);
+      ctx.moveTo(cx + gap,  cy); ctx.lineTo(cx + rLen, cy);
+      ctx.moveTo(cx, cy - rLen); ctx.lineTo(cx, cy - gap);
+      ctx.moveTo(cx, cy + gap);  ctx.lineTo(cx, cy + rLen);
+      ctx.stroke();
+
+      // ── Timecode top-left ──
       var now  = new Date();
-      var date = MONTHS[now.getMonth()] + '. ' + pad(now.getDate()) + ' ' + now.getFullYear();
-      var time = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-      var fs   = Math.round(canvas.width * 0.045);
+      var tc   = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+      ctx.font        = 'bold ' + fs + 'px monospace';
+      ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 5;
+      ctx.fillStyle   = 'rgba(220,255,220,0.92)';
+      ctx.fillText(tc, M, M + fs);
 
-      ctx.font         = 'bold ' + fs + 'px monospace';
-      ctx.shadowColor  = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur   = 4;
-      ctx.fillStyle    = 'rgba(200,255,200,0.92)';
-      ctx.fillText(date, fs * 0.5, canvas.height - fs * 1.6);
-      ctx.fillText(time, fs * 0.5, canvas.height - fs * 0.4);
-      ctx.shadowBlur   = 0;
+      // ── Battery top-right ──
+      var bx = W - M - fs*2.2, by = M + fs*0.15, bw = fs*2, bh = fs*0.7;
+      ctx.strokeStyle = 'rgba(220,255,220,0.85)';
+      ctx.lineWidth   = 1.5;
+      ctx.strokeRect(bx, by, bw, bh);
+      ctx.fillStyle   = 'rgba(220,255,220,0.85)';
+      ctx.fillRect(bx+bw, by+bh*0.25, 3, bh*0.5);   // terminal nub
+      ctx.fillRect(bx+2, by+2, bw*0.75-2, bh-4);     // charge level
+
+      // ── REC badge top-left (below timecode, blinks when recording) ──
+      var isRec = recorder && recorder.state === 'recording';
+      if (!isRec || Math.floor(Date.now()/500) % 2 === 0) {
+        var rx = M, ry = M + fs*1.5, rw = fs*2.2, rh = fs*0.9;
+        ctx.fillStyle = isRec ? 'rgba(210,30,30,0.92)' : 'rgba(210,30,30,0.45)';
+        ctx.beginPath();
+        ctx.roundRect(rx, ry, rw, rh, 3);
+        ctx.fill();
+        ctx.font      = 'bold ' + Math.round(fs*0.72) + 'px monospace';
+        ctx.fillStyle = '#fff';
+        ctx.shadowBlur = 0;
+        ctx.fillText('● REC', rx + rw*0.12, ry + rh*0.75);
+      }
+
+      // ── Date bottom-left ──
+      var date = MONTHS[now.getMonth()] + '. ' + pad(now.getDate()) + ' ' + now.getFullYear();
+      ctx.font      = 'bold ' + fs + 'px monospace';
+      ctx.fillStyle = 'rgba(200,255,200,0.88)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(date, M, H - M - fs*0.2);
+      ctx.shadowBlur = 0;
 
       frameLoop = requestAnimationFrame(drawFrame);
     }
