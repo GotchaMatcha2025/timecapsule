@@ -70,7 +70,7 @@
     #preview      { display: none; }
     #retro-canvas {
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 1 / 1;
       display: block;
       flex-shrink: 0;
     }
@@ -312,16 +312,21 @@
   function startRetroCanvas(videoEl, cameraStream) {
     var canvas = document.getElementById('retro-canvas');
     var ctx    = canvas.getContext('2d');
-    canvas.width  = 640;
+    canvas.width  = 480;
     canvas.height = 480;
 
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
     function drawFrame() {
-      // Mirror the front camera so it feels natural
+      // Center-crop camera feed into square, mirrored for front cam
+      var vw   = videoEl.videoWidth  || canvas.width;
+      var vh   = videoEl.videoHeight || canvas.height;
+      var size = Math.min(vw, vh);
+      var sx   = (vw - size) / 2;
+      var sy   = (vh - size) / 2;
       ctx.save();
       ctx.scale(-1, 1);
-      ctx.drawImage(videoEl, -canvas.width, 0, canvas.width, canvas.height);
+      ctx.drawImage(videoEl, sx, sy, size, size, -canvas.width, 0, canvas.width, canvas.height);
       ctx.restore();
 
       // Green-tinted scanlines
