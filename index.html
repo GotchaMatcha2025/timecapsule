@@ -395,7 +395,7 @@
     sb.from('capsules')
       .select('file_path')
       .eq('email', email)
-      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1)
       .then(function(res) {
         if (res.error || !res.data || res.data.length === 0) { show('s-notfound'); return; }
