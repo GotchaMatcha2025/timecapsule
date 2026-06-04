@@ -60,7 +60,8 @@
 
     /* Full-screen camera */
     #s-camera { padding: 0; position: relative; background: #000; }
-    #preview  { width: 100%; height: 100dvh; object-fit: cover; display: block; }
+    #preview        { display: none; } /* hidden — canvas is the display */
+    #retro-canvas   { width: 100%; height: 100dvh; object-fit: cover; display: block; }
     .camera-overlay {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -112,6 +113,7 @@
 <!-- ── Screen 2: Camera ─────────────────────────────── -->
 <div id="s-camera" class="screen">
   <video id="preview" autoplay muted playsinline webkit-playsinline x5-playsinline></video>
+  <canvas id="retro-canvas"></canvas>
   <div class="camera-overlay">
     <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
     <div class="timer-row">
@@ -258,6 +260,10 @@
   }
 
   // ── Camera ───────────────────────────────────────────
+  var canvasStream  = null;
+  var frameLoop     = null;
+  var MONTHS        = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
   function startCamera() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert('Your browser does not support camera recording. Please use Safari on iPhone or Chrome on Android.');
@@ -277,6 +283,7 @@
         var v = document.getElementById('preview');
         v.srcObject = stream;
         v.play().catch(function() {});
+        v.onloadedmetadata = function() { startRetroCanvas(v, s); };
       })
       .catch(function(err) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -286,6 +293,63 @@
           show('s-entry');
         }
       });
+  }
+
+  function startRetroCanvas(videoEl, cameraStream) {
+    var canvas = document.getElementById('retro-canvas');
+    var ctx    = canvas.getContext('2d');
+    canvas.width  = videoEl.videoWidth  || 720;
+    canvas.height = videoEl.videoHeight || 1280;
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function drawFrame() {
+      // Mirror the front camera so it feels natural
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoEl, -canvas.width, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      // Green-tinted scanlines
+      ctx.fillStyle = 'rgba(0, 20, 0, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (var y = 0; y < canvas.height; y += 3) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillRect(0, y, canvas.width, 1);
+      }
+
+      // Slight vignette
+      var vig = ctx.createRadialGradient(
+        canvas.width/2, canvas.height/2, canvas.height * 0.3,
+        canvas.width/2, canvas.height/2, canvas.height * 0.85
+      );
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Date & time overlay
+      var now  = new Date();
+      var date = MONTHS[now.getMonth()] + '. ' + pad(now.getDate()) + ' ' + now.getFullYear();
+      var time = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+      var fs   = Math.round(canvas.width * 0.045);
+
+      ctx.font         = 'bold ' + fs + 'px monospace';
+      ctx.shadowColor  = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur   = 4;
+      ctx.fillStyle    = 'rgba(200,255,200,0.92)';
+      ctx.fillText(date, fs * 0.5, canvas.height - fs * 1.6);
+      ctx.fillText(time, fs * 0.5, canvas.height - fs * 0.4);
+      ctx.shadowBlur   = 0;
+
+      frameLoop = requestAnimationFrame(drawFrame);
+    }
+    drawFrame();
+
+    // Record from canvas + original audio
+    var audioTrack = cameraStream.getAudioTracks()[0];
+    canvasStream   = canvas.captureStream(30);
+    if (audioTrack) canvasStream.addTrack(audioTrack);
   }
 
   function showPermissionScreen() {
@@ -307,11 +371,11 @@
   }
 
   function startRecording() {
-    if (!stream) return;
+    if (!canvasStream) return;
     chunks = [];
     var mime = bestMimeType();
-    try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
-    catch(e) { recorder = new MediaRecorder(stream); }
+    try { recorder = new MediaRecorder(canvasStream, mime ? { mimeType: mime } : {}); }
+    catch(e) { recorder = new MediaRecorder(canvasStream); }
 
     recorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = onRecordingDone;
@@ -341,7 +405,9 @@
   }
 
   function stopStream() {
+    if (frameLoop) { cancelAnimationFrame(frameLoop); frameLoop = null; }
     if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+    canvasStream = null;
   }
 
   function onRecordingDone() {
