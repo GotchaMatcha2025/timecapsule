@@ -226,9 +226,12 @@
   <div class="spacer"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-  // ── PASTE YOUR APPS SCRIPT WEB APP URL HERE ──
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9KZCr0kGMClr6NV5HYNVbvsrBfKtcM5ES2hwzXpq8LSh6mPJmA5eSKUl5GLk4GyoXeQ/exec';
+  var sb = supabase.createClient(
+    'https://tbkfwemzrurbdjapxyhm.supabase.co',
+    'sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga'
+  );
 
   var stream       = null;
   var recorder     = null;
@@ -262,11 +265,10 @@
       return;
     }
 
-    // Try front camera first, then any camera as fallback
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true })
       .catch(function(err) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          return Promise.reject(err); // don't fallback, it's a permission issue
+          return Promise.reject(err);
         }
         return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       })
@@ -294,10 +296,7 @@
     show('s-permission');
   }
 
-  function retryCamera() {
-    show('s-camera');
-    startCamera();
-  }
+  function retryCamera() { show('s-camera'); startCamera(); }
 
   function bestMimeType() {
     var types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
@@ -311,25 +310,21 @@
     if (!stream) return;
     chunks = [];
     var mime = bestMimeType();
-    try {
-      recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-    } catch(e) {
-      recorder = new MediaRecorder(stream);
-    }
+    try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+    catch(e) { recorder = new MediaRecorder(stream); }
 
     recorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = onRecordingDone;
     recorder.start(100);
 
     var btn = document.getElementById('record-btn');
-    btn.disabled    = true;
+    btn.disabled = true;
     btn.textContent = 'Recording…';
     document.getElementById('rec-dot').classList.add('active');
 
     var elapsed = 0;
-    var fill    = document.getElementById('timer-fill');
-    var count   = document.getElementById('timer-count');
-
+    var fill = document.getElementById('timer-fill');
+    var count = document.getElementById('timer-count');
     timerRef = setInterval(function() {
       elapsed += 100;
       fill.style.width = (elapsed / 15000 * 100) + '%';
@@ -373,59 +368,42 @@
     if (!recordedBlob) return;
     show('s-uploading');
 
-    toBase64(recordedBlob).then(function(base64) {
-      // mode: 'no-cors' bypasses the CORS preflight issue with Apps Script.
-      // We can't read the response, so we assume success if the request completes.
-      return fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode:   'no-cors',
-        body: JSON.stringify({
-          action:   'upload',
-          name:     userData.name,
-          email:    userData.email,
-          video:    base64,
-          mimeType: recordedBlob.type || 'video/webm'
-        })
+    var ext      = (recordedBlob.type || '').indexOf('mp4') !== -1 ? 'mp4' : 'webm';
+    var safeMail = userData.email.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
+    var path     = safeMail + '/' + Date.now() + '.' + ext;
+
+    sb.storage.from('videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm' })
+      .then(function(res) {
+        if (res.error) throw new Error(res.error.message);
+        return sb.from('capsules').insert({ name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path });
+      })
+      .then(function(res) {
+        if (res.error) throw new Error(res.error.message);
+        show('s-success');
+      })
+      .catch(function(err) {
+        document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
+        show('s-error');
       });
-    })
-    .then(function() {
-      // no-cors responses are opaque — treat completion as success
-      show('s-success');
-    })
-    .catch(function(err) {
-      document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
-      show('s-error');
-    });
   }
 
   // ── Retrieve ─────────────────────────────────────────
   function retrieveVideo() {
-    var email = document.getElementById('retrieve-email').value.trim();
+    var email = document.getElementById('retrieve-email').value.trim().toLowerCase();
     if (!isValidEmail(email)) return alert('Please enter a valid email address.');
 
-    // Use GET for retrieval — simpler, no CORS preflight
-    fetch(SCRIPT_URL + '?action=retrieve&email=' + encodeURIComponent(email))
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.fileId) {
-          document.getElementById('watch-video').src =
-            'https://drive.google.com/uc?export=download&id=' + data.fileId;
-          show('s-watch');
-        } else {
-          show('s-notfound');
-        }
+    sb.from('capsules')
+      .select('file_path')
+      .eq('email', email)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(function(res) {
+        if (res.error || !res.data || res.data.length === 0) { show('s-notfound'); return; }
+        var publicUrl = sb.storage.from('videos').getPublicUrl(res.data[0].file_path).data.publicUrl;
+        document.getElementById('watch-video').src = publicUrl;
+        show('s-watch');
       })
       .catch(function() { show('s-notfound'); });
-  }
-
-  // ── Helpers ──────────────────────────────────────────
-  function toBase64(blob) {
-    return new Promise(function(resolve, reject) {
-      var r = new FileReader();
-      r.onload  = function() { resolve(r.result.split(',')[1]); };
-      r.onerror = reject;
-      r.readAsDataURL(blob);
-    });
   }
 
   function isValidEmail(e) {
