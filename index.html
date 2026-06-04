@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Time Capsule</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d0d0d;
+      color: #f0f0f0;
+      min-height: 100dvh;
+      overscroll-behavior: none;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      padding: 40px 24px 48px;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+    .screen.active { display: flex; }
+
+    h1   { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+    .sub { color: #777; font-size: 0.95rem; line-height: 1.6; margin-bottom: 28px; }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      padding: 16px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input:focus { border-color: #555; }
+
+    .btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .btn:disabled { opacity: 0.35; }
+    .btn-primary   { background: #c0392b; color: #fff; }
+    .btn-secondary { background: #1a1a1a; color: #f0f0f0; border: 1px solid #2a2a2a; margin-top: 12px; }
+
+    /* Full-screen camera */
+    #s-camera { padding: 0; position: relative; background: #000; }
+    #preview  { width: 100%; height: 100dvh; object-fit: cover; display: block; }
+    .camera-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 24px 24px 52px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    }
+    .timer-bar { height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
+    .timer-fill { height: 100%; width: 0%; background: #c0392b; border-radius: 2px; transition: width 0.1s linear; }
+    .timer-row  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .timer-count { font-size: 2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+    .timer-count.urgent { color: #e74c3c; }
+    .rec-dot { width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; display: none; animation: blink 1s step-start infinite; }
+    .rec-dot.active { display: inline-block; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    video#playback, video#watch-video {
+      width: 100%; border-radius: 14px; background: #111;
+      display: block; margin: 16px 0; max-height: 52vh; object-fit: cover;
+    }
+
+    .center  { text-align: center; align-items: center; }
+    .spacer  { flex: 1; }
+    .icon    { font-size: 3.5rem; margin-bottom: 16px; }
+
+    .toggle { text-align: center; margin-top: 24px; color: #555; font-size: 0.9rem; }
+    .toggle a { color: #888; cursor: pointer; text-decoration: underline; }
+
+    .permission-box {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    }
+    .permission-box h3 { font-size: 1rem; margin-bottom: 10px; }
+    .permission-box ol { padding-left: 18px; color: #888; font-size: 0.9rem; line-height: 2.2; }
+  </style>
+</head>
+<body>
+
+<!-- ── Screen 1: Entry ──────────────────────────────── -->
+<div id="s-entry" class="screen active">
+  <h1>Time Capsule</h1>
+  <p class="sub">Record a 15-second message to your future self. In one year, you'll receive it back.</p>
+  <input type="text"  id="name"  placeholder="Your name"  autocomplete="name">
+  <input type="email" id="email" placeholder="Your email" autocomplete="email" inputmode="email">
+  <div class="spacer"></div>
+  <button class="btn btn-primary" id="start-btn" onclick="goToCamera()">Start Recording →</button>
+  <div class="toggle"><a onclick="show('s-retrieve')">Already recorded? Retrieve your video</a></div>
+</div>
+
+<!-- ── Screen 2: Camera ─────────────────────────────── -->
+<div id="s-camera" class="screen">
+  <video id="preview" autoplay muted playsinline webkit-playsinline x5-playsinline></video>
+  <div class="camera-overlay">
+    <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
+    <div class="timer-row">
+      <div id="timer-count" class="timer-count">15</div>
+      <span id="rec-dot" class="rec-dot"></span>
+    </div>
+    <button id="record-btn" class="btn btn-primary" onclick="startRecording()">● Record</button>
+  </div>
+</div>
+
+<!-- ── Screen 3: Permission denied ─────────────────── -->
+<div id="s-permission" class="screen">
+  <h1>Allow camera access</h1>
+  <p class="sub">Your browser needs camera and microphone access to record your message.</p>
+
+  <div class="permission-box" id="perm-ios" style="display:none">
+    <h3>📱 iPhone — Safari</h3>
+    <ol>
+      <li>Open the <strong>Settings</strong> app</li>
+      <li>Scroll down to <strong>Safari</strong></li>
+      <li>Under Privacy &amp; Security → set <strong>Camera</strong> to Allow</li>
+      <li>Come back here and tap Retry</li>
+    </ol>
+  </div>
+
+  <div class="permission-box" id="perm-android" style="display:none">
+    <h3>📱 Android — Chrome</h3>
+    <ol>
+      <li>Tap the <strong>lock icon</strong> in the address bar</li>
+      <li>Tap <strong>Permissions</strong></li>
+      <li>Turn on <strong>Camera</strong> and <strong>Microphone</strong></li>
+      <li>Refresh the page, then tap Retry</li>
+    </ol>
+  </div>
+
+  <div class="permission-box" id="perm-generic" style="display:none">
+    <h3>Allow in your browser</h3>
+    <ol>
+      <li>Look for a camera or lock icon in your address bar</li>
+      <li>Tap it and select <strong>Allow</strong> for camera and microphone</li>
+      <li>Reload the page and try again</li>
+    </ol>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-primary" onclick="retryCamera()">Retry</button>
+  <button class="btn btn-secondary" onclick="show('s-entry')">← Go back</button>
+</div>
+
+<!-- ── Screen 4: Review ─────────────────────────────── -->
+<div id="s-review" class="screen">
+  <h1>Preview</h1>
+  <p class="sub">Happy with it? Hit save — otherwise record again.</p>
+  <video id="playback" controls playsinline></video>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" onclick="submitVideo()">Save My Time Capsule</button>
+  <button class="btn btn-secondary" onclick="reRecord()">Re-record</button>
+</div>
+
+<!-- ── Screen 5: Uploading ──────────────────────────── -->
+<div id="s-uploading" class="screen center">
+  <div class="spacer"></div>
+  <div class="icon">⏳</div>
+  <h1>Saving…</h1>
+  <p class="sub">Please keep this screen open.</p>
+  <div class="spacer"></div>
+</div>
+
+<!-- ── Screen 6: Success ────────────────────────────── -->
+<div id="s-success" class="screen center">
+  <div class="spacer"></div>
+  <div class="icon">💌</div>
+  <h1>Sealed.</h1>
+  <p class="sub">Your time capsule is saved.<br>We'll send it back to you in one year.</p>
+  <div class="spacer"></div>
+</div>
+
+<!-- ── Screen 7: Error ──────────────────────────────── -->
+<div id="s-error" class="screen center">
+  <div class="spacer"></div>
+  <div class="icon">⚠️</div>
+  <h1>Something went wrong</h1>
+  <p class="sub" id="error-msg">Please try again.</p>
+  <button class="btn btn-secondary" style="margin-top:20px" onclick="show('s-review')">Try Again</button>
+  <div class="spacer"></div>
+</div>
+
+<!-- ── Screen 8: Retrieve ───────────────────────────── -->
+<div id="s-retrieve" class="screen">
+  <h1>Watch your capsule</h1>
+  <p class="sub">Enter the email you used when you recorded your message.</p>
+  <input type="email" id="retrieve-email" placeholder="Your email" autocomplete="email" inputmode="email">
+  <div class="spacer"></div>
+  <button class="btn btn-primary" onclick="retrieveVideo()">Find My Video</button>
+  <div class="toggle"><a onclick="show('s-entry')">← Record a new message</a></div>
+</div>
+
+<!-- ── Screen 9: Watch ──────────────────────────────── -->
+<div id="s-watch" class="screen">
+  <h1>A message from your past self</h1>
+  <p class="sub">Recorded one year ago.</p>
+  <video id="watch-video" controls playsinline style="width:100%;border-radius:14px;background:#111;margin-top:16px;"></video>
+</div>
+
+<!-- ── Screen 10: Not found ─────────────────────────── -->
+<div id="s-notfound" class="screen center">
+  <div class="spacer"></div>
+  <div class="icon">🔍</div>
+  <h1>Not found</h1>
+  <p class="sub">No capsule found for that email.<br>Double-check for typos.</p>
+  <button class="btn btn-secondary" style="margin-top:20px" onclick="show('s-retrieve')">Try again</button>
+  <div class="spacer"></div>
+</div>
+
+<script>
+  // ── PASTE YOUR APPS SCRIPT WEB APP URL HERE ──
+  var SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+  var stream       = null;
+  var recorder     = null;
+  var chunks       = [];
+  var recordedBlob = null;
+  var timerRef     = null;
+  var userData     = {};
+
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ── Entry ────────────────────────────────────────────
+  function goToCamera() {
+    var name  = document.getElementById('name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    if (!name)                return alert('Please enter your name.');
+    if (!isValidEmail(email)) return alert('Please enter a valid email address.');
+    userData = { name: name, email: email };
+    show('s-camera');
+    startCamera();
+  }
+
+  // ── Camera ───────────────────────────────────────────
+  function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Your browser does not support camera recording. Please use Safari on iPhone or Chrome on Android.');
+      show('s-entry');
+      return;
+    }
+
+    // Try front camera first, then any camera as fallback
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true })
+      .catch(function(err) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          return Promise.reject(err); // don't fallback, it's a permission issue
+        }
+        return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      })
+      .then(function(s) {
+        stream = s;
+        var v = document.getElementById('preview');
+        v.srcObject = stream;
+        v.play().catch(function() {});
+      })
+      .catch(function(err) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          showPermissionScreen();
+        } else {
+          alert('Could not start camera: ' + (err.message || err.name) + '. Please try a different browser.');
+          show('s-entry');
+        }
+      });
+  }
+
+  function showPermissionScreen() {
+    var ua = navigator.userAgent || '';
+    document.getElementById('perm-ios').style.display     = /iPhone|iPad|iPod/.test(ua) ? 'block' : 'none';
+    document.getElementById('perm-android').style.display = /Android/.test(ua)          ? 'block' : 'none';
+    document.getElementById('perm-generic').style.display = /iPhone|iPad|iPod|Android/.test(ua) ? 'none' : 'block';
+    show('s-permission');
+  }
+
+  function retryCamera() {
+    show('s-camera');
+    startCamera();
+  }
+
+  function bestMimeType() {
+    var types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+    for (var i = 0; i < types.length; i++) {
+      try { if (MediaRecorder.isTypeSupported(types[i])) return types[i]; } catch(e) {}
+    }
+    return '';
+  }
+
+  function startRecording() {
+    if (!stream) return;
+    chunks = [];
+    var mime = bestMimeType();
+    try {
+      recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+    } catch(e) {
+      recorder = new MediaRecorder(stream);
+    }
+
+    recorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = onRecordingDone;
+    recorder.start(100);
+
+    var btn = document.getElementById('record-btn');
+    btn.disabled    = true;
+    btn.textContent = 'Recording…';
+    document.getElementById('rec-dot').classList.add('active');
+
+    var elapsed = 0;
+    var fill    = document.getElementById('timer-fill');
+    var count   = document.getElementById('timer-count');
+
+    timerRef = setInterval(function() {
+      elapsed += 100;
+      fill.style.width = (elapsed / 15000 * 100) + '%';
+      var secs = Math.max(0, Math.ceil((15000 - elapsed) / 1000));
+      count.textContent = secs;
+      count.classList.toggle('urgent', secs <= 5);
+      if (elapsed >= 15000) stopRecording();
+    }, 100);
+  }
+
+  function stopRecording() {
+    clearInterval(timerRef); timerRef = null;
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  }
+
+  function stopStream() {
+    if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+  }
+
+  function onRecordingDone() {
+    recordedBlob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+    document.getElementById('playback').src = URL.createObjectURL(recordedBlob);
+    stopStream();
+    show('s-review');
+  }
+
+  function reRecord() {
+    document.getElementById('timer-fill').style.width  = '0%';
+    document.getElementById('timer-count').textContent = '15';
+    document.getElementById('timer-count').classList.remove('urgent');
+    document.getElementById('rec-dot').classList.remove('active');
+    var btn = document.getElementById('record-btn');
+    btn.disabled    = false;
+    btn.textContent = '● Record';
+    show('s-camera');
+    startCamera();
+  }
+
+  // ── Upload ───────────────────────────────────────────
+  function submitVideo() {
+    if (!recordedBlob) return;
+    show('s-uploading');
+
+    toBase64(recordedBlob).then(function(base64) {
+      // Send as text/plain to avoid CORS preflight with Apps Script
+      return fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action:   'upload',
+          name:     userData.name,
+          email:    userData.email,
+          video:    base64,
+          mimeType: recordedBlob.type || 'video/webm'
+        })
+      });
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        show('s-success');
+      } else {
+        throw new Error(data.error || 'Upload failed');
+      }
+    })
+    .catch(function(err) {
+      document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
+      show('s-error');
+    });
+  }
+
+  // ── Retrieve ─────────────────────────────────────────
+  function retrieveVideo() {
+    var email = document.getElementById('retrieve-email').value.trim();
+    if (!isValidEmail(email)) return alert('Please enter a valid email address.');
+
+    // Use GET for retrieval — simpler, no CORS preflight
+    fetch(SCRIPT_URL + '?action=retrieve&email=' + encodeURIComponent(email))
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.fileId) {
+          document.getElementById('watch-video').src =
+            'https://drive.google.com/uc?export=download&id=' + data.fileId;
+          show('s-watch');
+        } else {
+          show('s-notfound');
+        }
+      })
+      .catch(function() { show('s-notfound'); });
+  }
+
+  // ── Helpers ──────────────────────────────────────────
+  function toBase64(blob) {
+    return new Promise(function(resolve, reject) {
+      var r = new FileReader();
+      r.onload  = function() { resolve(r.result.split(',')[1]); };
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  function isValidEmail(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+</script>
+</body>
+</html>
