@@ -372,7 +372,7 @@
     var safeMail = userData.email.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
     var path     = safeMail + '/' + Date.now() + '.' + ext;
 
-    sb.storage.from('videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm' })
+    sb.storage.from('Videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm' })
       .then(function(res) {
         if (res.error) throw new Error(res.error.message);
         return sb.from('capsules').insert({ name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path });
@@ -399,7 +399,7 @@
       .limit(1)
       .then(function(res) {
         if (res.error || !res.data || res.data.length === 0) { show('s-notfound'); return; }
-        var publicUrl = sb.storage.from('videos').getPublicUrl(res.data[0].file_path).data.publicUrl;
+        var publicUrl = sb.storage.from('Videos').getPublicUrl(res.data[0].file_path).data.publicUrl;
         document.getElementById('watch-video').src = publicUrl;
         show('s-watch');
       })
