@@ -242,6 +242,18 @@
   <div class="spacer"></div>
 </div>
 
+<!-- ── Screen 11: Already recorded ─────────────────── -->
+<div id="s-duplicate" class="screen center">
+  <div class="spacer"></div>
+  <div class="icon">🎞️</div>
+  <h1>You're already in the capsule.</h1>
+  <p class="sub">Imperfection is part of the process — your first take is the most honest one. It's already sealed and waiting for you.</p>
+  <p class="sub" style="margin-top:0;color:#555;">Want to record over it anyway?</p>
+  <div class="spacer"></div>
+  <button class="btn btn-primary"   onclick="proceedToCamera()">Record again</button>
+  <button class="btn btn-secondary" onclick="show('s-entry')">← Keep my original</button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   var sb = supabase.createClient(
@@ -269,6 +281,25 @@
     if (!name)                return alert('Please enter your name.');
     if (!isValidEmail(email)) return alert('Please enter a valid email address.');
     userData = { name: name, email: email };
+
+    // Check if email already has a capsule
+    sb.from('capsules')
+      .select('email')
+      .eq('email', email.toLowerCase().trim())
+      .limit(1)
+      .then(function(res) {
+        if (res.data && res.data.length > 0) {
+          show('s-duplicate'); // already recorded
+        } else {
+          proceedToCamera();
+        }
+      })
+      .catch(function() {
+        proceedToCamera(); // on error just proceed
+      });
+  }
+
+  function proceedToCamera() {
     show('s-camera');
     startCamera();
   }
