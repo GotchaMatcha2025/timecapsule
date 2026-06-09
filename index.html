@@ -346,6 +346,15 @@
   <div class="spacer"></div>
 </div>
 
+<!-- ── Screen 11: Already recorded ──────────────────── -->
+<div id="s-duplicate" class="screen center">
+  <div class="spacer"></div>
+  <div class="icon">🔒</div>
+  <h1 id="dup-title">Already sealed.</h1>
+  <p class="sub" id="dup-msg">Your capsule is already in the vault. Imperfection is part of the process — that's what makes it real.</p>
+  <div class="spacer"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   var sb = supabase.createClient(
@@ -373,8 +382,33 @@
     if (!name)                return alert('Please enter your name.');
     if (!isValidEmail(email)) return alert('Please enter a valid email address.');
     userData = { name: name, email: email };
-    show('s-camera');
-    startCamera();
+
+    var btn = document.getElementById('start-btn');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+
+    sb.from('capsules')
+      .select('email', { count: 'exact', head: true })
+      .eq('email', email.toLowerCase().trim())
+      .then(function(res) {
+        btn.disabled = false;
+        btn.textContent = 'Start Recording →';
+        if (res.count && res.count > 0) {
+          var firstName = name.split(/\s+/)[0];
+          document.getElementById('dup-title').textContent = 'Hey ' + firstName + ', you\'re already in.';
+          document.getElementById('dup-msg').textContent   = 'Your time capsule is already sealed. Imperfection is part of the process — that\'s what makes it real.';
+          show('s-duplicate');
+        } else {
+          show('s-camera');
+          startCamera();
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Start Recording →';
+        show('s-camera');
+        startCamera();
+      });
   }
 
   // ── Camera ───────────────────────────────────────────
