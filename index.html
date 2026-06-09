@@ -439,7 +439,12 @@
         var v = document.getElementById('preview');
         v.srcObject = stream;
         v.play().catch(function() {});
-        v.onloadedmetadata = function() { startRetroCanvas(v, s); };
+        var started = false;
+        v.onloadedmetadata = function() {
+          if (started) return;   // onloadedmetadata can fire more than once
+          started = true;
+          startRetroCanvas(v, s);
+        };
       })
       .catch(function(err) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -462,6 +467,9 @@
     var flickerVal = 1;
 
     function drawFrame() {
+      // Schedule next frame FIRST so a throw below can never kill the loop
+      frameLoop = requestAnimationFrame(drawFrame);
+
       var W = canvas.width, H = canvas.height;
       var M = W * 0.04; // margin
       var fs = Math.round(W * 0.048);
@@ -553,9 +561,7 @@
       if (!isRec || Math.floor(Date.now()/500) % 2 === 0) {
         var rx = M, ry = M + fs*1.5, rw = fs*2.2, rh = fs*0.9;
         ctx.fillStyle = isRec ? 'rgba(210,30,30,0.92)' : 'rgba(210,30,30,0.45)';
-        ctx.beginPath();
-        ctx.roundRect(rx, ry, rw, rh, 3);
-        ctx.fill();
+        ctx.fillRect(rx, ry, rw, rh);
         ctx.font      = 'bold ' + Math.round(fs*0.72) + 'px monospace';
         ctx.fillStyle = '#fff';
         ctx.shadowBlur = 0;
@@ -569,15 +575,23 @@
       ctx.shadowBlur = 4;
       ctx.fillText(date, M, H - M - fs*0.2);
       ctx.shadowBlur = 0;
-
-      frameLoop = requestAnimationFrame(drawFrame);
     }
     drawFrame();
 
-    // Record from canvas + original audio
-    var audioTrack = cameraStream.getAudioTracks()[0];
-    canvasStream   = canvas.captureStream(30);
-    if (audioTrack) canvasStream.addTrack(audioTrack);
+    // Record from canvas + original audio. Older iOS Safari can't capture
+    // a stream from a canvas — fall back to the raw camera stream so the
+    // Record button still works (without the retro overlay baked into the file).
+    try {
+      if (typeof canvas.captureStream !== 'function') throw new Error('captureStream unsupported');
+      canvasStream = canvas.captureStream(30);
+      var audioTrack = cameraStream.getAudioTracks()[0];
+      if (audioTrack && canvasStream.getAudioTracks().length === 0) {
+        canvasStream.addTrack(audioTrack);
+      }
+      if (!canvasStream.getVideoTracks().length) throw new Error('no video track from canvas');
+    } catch (e) {
+      canvasStream = cameraStream;   // fallback: record the camera directly
+    }
   }
 
   function showPermissionScreen() {
