@@ -713,7 +713,6 @@
     if (!recordedBlob) return;
     show('s-uploading');
 
-    // Keep screen awake during upload
     if (navigator.wakeLock) {
       navigator.wakeLock.request('screen').then(function(wl) { wakeLock = wl; }).catch(function() {});
     }
@@ -722,69 +721,31 @@
     var safeMail = userData.email.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
     var path     = safeMail + '/' + Date.now() + '.' + ext;
 
-    var bar = document.getElementById('upload-bar-fill');
-    var pct = document.getElementById('upload-pct');
-
-    // Use XHR so we get upload progress events
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://tbkfwemzrurbdjapxyhm.supabase.co/storage/v1/object/Videos/' + path, true);
-    xhr.setRequestHeader('Authorization', 'Bearer sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga');
-    xhr.setRequestHeader('Content-Type', recordedBlob.type || 'video/webm');
-
-    xhr.upload.onprogress = function(e) {
-      if (e.lengthComputable) {
-        var p = Math.round(e.loaded / e.total * 88);
-        bar.style.width = p + '%';
-        if (pct) pct.textContent = p + '%';
-      }
-    };
-
-    xhr.onload = function() {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        bar.style.width = '94%';
-        if (pct) pct.textContent = '94%';
-
-        sb.from('capsules').upsert(
+    // Use Supabase SDK — handles the sb_publishable_ key format correctly
+    sb.storage.from('Videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm', upsert: false })
+      .then(function(res) {
+        if (res.error) throw new Error(res.error.message);
+        return sb.from('capsules').upsert(
           { name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path },
           { onConflict: 'email' }
-        ).then(function(res) {
-          releaseWakeLock();
-          if (res.error) { throw new Error(res.error.message); }
-          bar.style.width = '100%';
-          if (pct) pct.textContent = '100%';
-
-          // Personalised success screen
-          var firstName = userData.name.trim().split(/\s+/)[0];
-          var nextYear  = new Date().getFullYear() + 1;
-          document.getElementById('success-title').textContent = 'Sealed, ' + firstName + '.';
-          document.getElementById('success-msg').innerHTML =
-            'Your time capsule is saved.<br>See you in ' + nextYear + ', ' + firstName + '.';
-
-          show('s-success');
-        }).catch(function(err) {
-          releaseWakeLock();
-          document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
-          show('s-error');
-        });
-      } else {
+        );
+      })
+      .then(function(res) {
         releaseWakeLock();
-        try {
-          var resp = JSON.parse(xhr.responseText);
-          document.getElementById('error-msg').textContent = (resp && resp.error) ? resp.error : ('Upload failed (HTTP ' + xhr.status + '). Please try again.');
-        } catch(e) {
-          document.getElementById('error-msg').textContent = 'Upload failed (HTTP ' + xhr.status + '). Please try again.';
-        }
+        if (res.error) throw new Error(res.error.message);
+
+        var firstName = userData.name.trim().split(/\s+/)[0];
+        var nextYear  = new Date().getFullYear() + 1;
+        document.getElementById('success-title').textContent = 'Sealed, ' + firstName + '.';
+        document.getElementById('success-msg').innerHTML =
+          'Your time capsule is saved.<br>See you in ' + nextYear + ', ' + firstName + '.';
+        show('s-success');
+      })
+      .catch(function(err) {
+        releaseWakeLock();
+        document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
         show('s-error');
-      }
-    };
-
-    xhr.onerror = function() {
-      releaseWakeLock();
-      document.getElementById('error-msg').textContent = 'Network error. Please check your connection and try again.';
-      show('s-error');
-    };
-
-    xhr.send(recordedBlob);
+      });
   }
 
   // ── Retrieve ─────────────────────────────────────────
