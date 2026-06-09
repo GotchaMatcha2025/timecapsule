@@ -95,19 +95,6 @@
     .mic-level { display: none; }
     .mic-bar   { display: none; }
 
-    /* Countdown overlay */
-    #countdown-overlay {
-      position: absolute; inset: 0;
-      display: none; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.55); z-index: 10;
-    }
-    #countdown-overlay.active { display: flex; }
-    #countdown-number {
-      font-size: 30vw; font-weight: 900; color: #fff;
-      text-shadow: 0 0 40px rgba(192,57,43,0.8);
-      animation: pop 0.9s ease-out;
-    }
-    @keyframes pop { 0%{transform:scale(1.6);opacity:0} 30%{opacity:1;transform:scale(1)} 80%{opacity:1} 100%{opacity:0} }
 
     /* Upload progress */
     .upload-progress { width: 100%; margin-top: 20px; }
@@ -178,9 +165,7 @@
   <video id="preview" autoplay muted playsinline webkit-playsinline x5-playsinline></video>
   <div style="position:relative; flex-shrink:0;">
     <canvas id="retro-canvas"></canvas>
-    <div id="countdown-overlay">
-      <span id="countdown-number">3</span>
-    </div>
+
   </div>
   <div class="camera-controls">
     <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
@@ -198,7 +183,7 @@
       <div class="mic-bar" id="mb6"></div>
       <div class="mic-bar" id="mb7"></div>
     </div>
-    <button id="record-btn" class="btn btn-primary" onclick="beginCountdown()">● Record</button>
+    <button id="record-btn" class="btn btn-primary" onclick="startRecording()">● Record</button>
   </div>
 </div>
 
@@ -380,32 +365,6 @@
   function toggleStartBtn() {
     var checked = document.getElementById('consent').checked;
     document.getElementById('start-btn').disabled = !checked;
-  }
-
-  function beginCountdown() {
-    var overlay = document.getElementById('countdown-overlay');
-    var num     = document.getElementById('countdown-number');
-    var btn     = document.getElementById('record-btn');
-    btn.disabled = true;
-    overlay.classList.add('active');
-    var count = 3;
-    num.textContent = count;
-
-    function tick() {
-      count--;
-      if (count <= 0) {
-        overlay.classList.remove('active');
-        startRecording();
-      } else {
-        num.textContent = count;
-        // re-trigger CSS pop animation
-        num.style.animation = 'none';
-        void num.offsetHeight;
-        num.style.animation = '';
-        setTimeout(tick, 900);
-      }
-    }
-    setTimeout(tick, 900);
   }
 
   // ── Camera ───────────────────────────────────────────
