@@ -433,9 +433,15 @@
     drawFrame();
 
     // Record from canvas + original audio
+    // iOS Safari doesn't support captureStream — fall back to raw camera stream
     var audioTrack = cameraStream.getAudioTracks()[0];
-    canvasStream   = canvas.captureStream(30);
-    if (audioTrack) canvasStream.addTrack(audioTrack);
+    if (typeof canvas.captureStream === 'function') {
+      canvasStream = canvas.captureStream(30);
+      if (audioTrack) canvasStream.addTrack(audioTrack);
+    } else {
+      // iOS fallback: record raw camera, canvas is display-only
+      canvasStream = cameraStream;
+    }
   }
 
   function showPermissionScreen() {
