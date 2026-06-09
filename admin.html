@@ -421,14 +421,15 @@
           })
         : '—';
 
+      // Pass index only — no JSON in onclick attributes
       html += '<tr>' +
         '<td class="num">' + globalIdx + '</td>' +
         '<td class="name">' + escHtml(row.name || '—') + '</td>' +
         '<td class="email">' + escHtml(row.email || '—') + '</td>' +
         '<td class="date">' + dateStr + '</td>' +
         '<td>' +
-          '<button class="action-btn preview-btn" onclick="openPreview(' + JSON.stringify(JSON.stringify(row)) + ')">▶ Preview</button>' +
-          '<button class="action-btn delete-btn" onclick="askDelete(' + JSON.stringify(JSON.stringify(row)) + ')">Delete</button>' +
+          '<button class="action-btn preview-btn" onclick="openPreview(' + i + ')">▶ Preview</button>' +
+          '<button class="action-btn delete-btn" onclick="askDelete(' + i + ')">Delete</button>' +
         '</td>' +
       '</tr>';
     });
@@ -436,8 +437,9 @@
   }
 
   // ── Video preview ─────────────────────────────────────
-  function openPreview(rowJson) {
-    var row = JSON.parse(rowJson);
+  function openPreview(idx) {
+    var row = filteredRows[idx];
+    if (!row) return;
     var vid = document.getElementById('modal-video');
     var url = sb.storage.from('Videos').getPublicUrl(row.file_path).data.publicUrl;
 
@@ -449,6 +451,7 @@
 
     vid.src = url;
     vid.load();
+    vid.play().catch(function() {});
     document.getElementById('modal-overlay').classList.add('active');
   }
 
@@ -461,8 +464,9 @@
   }
 
   // ── Delete ────────────────────────────────────────────
-  function askDelete(rowJson) {
-    pendingDelete = JSON.parse(rowJson);
+  function askDelete(idx) {
+    pendingDelete = filteredRows[idx];
+    if (!pendingDelete) return;
     document.getElementById('confirm-msg').textContent =
       'Delete "' + (pendingDelete.name || pendingDelete.email) + '"? This cannot be undone.';
     document.getElementById('confirm-overlay').classList.add('active');
