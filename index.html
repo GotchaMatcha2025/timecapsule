@@ -690,8 +690,18 @@
         setTimeout(function() { show('s-success'); }, 500);
       })
       .catch(function(err) {
-        document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
-        show('s-error');
+        var msg = err.message || '';
+        var isDuplicate = msg.indexOf('duplicate') !== -1 || msg.indexOf('pkey') !== -1 || msg.indexOf('unique') !== -1;
+        if (isDuplicate) {
+          sb.storage.from('Videos').remove([path]).catch(function() {});
+          var firstName = userData.name.trim().split(/\s+/)[0];
+          document.getElementById('dup-title').textContent = 'Hey ' + firstName + ', you\'re already in.';
+          document.getElementById('dup-msg').textContent   = 'Your time capsule is already sealed. Imperfection is part of the process — that\'s what makes it real.';
+          show('s-duplicate');
+        } else {
+          document.getElementById('error-msg').textContent = msg || 'Upload failed. Please try again.';
+          show('s-error');
+        }
       });
   }
 
