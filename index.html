@@ -100,6 +100,9 @@
     .spacer  { flex: 1; }
     .icon    { font-size: 3.5rem; margin-bottom: 16px; }
 
+    .upload-track { width: 200px; height: 2px; background: rgba(255,255,255,0.12); border-radius: 1px; overflow: hidden; margin: 20px auto 0; }
+    .upload-fill  { height: 100%; width: 0%; background: #c0392b; border-radius: 1px; }
+
     .toggle { text-align: center; margin-top: 24px; color: #555; font-size: 0.9rem; }
     .toggle a { color: #888; cursor: pointer; text-decoration: underline; }
 
@@ -297,6 +300,7 @@
   <div class="icon">⏳</div>
   <h1>Saving…</h1>
   <p class="sub">Please keep this screen open.</p>
+  <div class="upload-track"><div id="upload-bar" class="upload-fill"></div></div>
   <div class="spacer"></div>
 </div>
 
@@ -654,9 +658,21 @@
   }
 
   // ── Upload ───────────────────────────────────────────
+  function setUploadProgress(pct, fast) {
+    var bar = document.getElementById('upload-bar');
+    bar.style.transition = fast ? 'width 0.4s ease' : 'width 12s cubic-bezier(0.05, 0, 0.2, 1)';
+    bar.style.width = pct + '%';
+  }
+
   function submitVideo() {
     if (!recordedBlob) return;
     show('s-uploading');
+
+    // Reset then animate toward 75% (simulates upload progress)
+    var bar = document.getElementById('upload-bar');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    requestAnimationFrame(function() { setUploadProgress(75, false); });
 
     var ext      = (recordedBlob.type || '').indexOf('mp4') !== -1 ? 'mp4' : 'webm';
     var safeMail = userData.email.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
@@ -665,11 +681,13 @@
     sb.storage.from('Videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm' })
       .then(function(res) {
         if (res.error) throw new Error(res.error.message);
+        setUploadProgress(90, true);
         return sb.from('capsules').insert({ name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path });
       })
       .then(function(res) {
         if (res.error) throw new Error(res.error.message);
-        show('s-success');
+        setUploadProgress(100, true);
+        setTimeout(function() { show('s-success'); }, 500);
       })
       .catch(function(err) {
         document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
