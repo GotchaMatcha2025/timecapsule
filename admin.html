@@ -15,518 +15,257 @@
       min-height: 100dvh;
     }
 
-    /* ── Login gate ── */
+    /* ── Login ── */
     #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100dvh;
-      padding: 40px 24px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100dvh; padding: 40px 24px;
     }
-    #login-screen h1 { font-size: 1.4rem; margin-bottom: 6px; letter-spacing: 0.05em; }
-    #login-screen .sub { color: #555; font-size: 0.88rem; margin-bottom: 36px; }
-    #login-box { width: 100%; max-width: 340px; }
+    .brand-title { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.1em; color: #fff; margin-bottom: 4px; }
+    .brand-sub   { font-size: 0.8rem; color: #444; letter-spacing: 0.06em; margin-bottom: 40px; }
+    #login-box   { width: 100%; max-width: 320px; }
     #login-box input {
-      width: 100%; padding: 16px; background: #1a1a1a;
-      border: 1px solid #2a2a2a; border-radius: 12px;
-      color: #f0f0f0; font-size: 1rem; margin-bottom: 12px;
+      width: 100%; padding: 15px 16px;
+      background: #151515; border: 1px solid #222; border-radius: 12px;
+      color: #f0f0f0; font-size: 1rem; margin-bottom: 10px;
       outline: none; -webkit-appearance: none;
     }
-    #login-box input:focus { border-color: #555; }
+    #login-box input:focus { border-color: #444; }
     #login-btn {
-      width: 100%; padding: 16px; background: #c0392b;
-      border: none; border-radius: 12px; color: #fff;
-      font-size: 1rem; font-weight: 600; cursor: pointer;
+      width: 100%; padding: 15px;
+      background: #c0392b; border: none; border-radius: 12px;
+      color: #fff; font-size: 0.95rem; font-weight: 600; cursor: pointer;
     }
-    #login-err { color: #e74c3c; font-size: 0.85rem; margin-top: 10px; text-align: center; min-height: 20px; }
+    #login-err { color: #e74c3c; font-size: 0.82rem; margin-top: 10px; text-align: center; min-height: 18px; }
 
     /* ── Dashboard ── */
-    #dashboard { display: none; }
+    #dashboard { display: none; max-width: 700px; margin: 0 auto; padding: 36px 24px 60px; }
 
-    header {
-      background: #111;
-      border-bottom: 1px solid #1e1e1e;
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 36px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-dot { width: 8px; height: 8px; background: #c0392b; border-radius: 50%; animation: blink 1.4s step-start infinite; }
+    .dash-title { font-size: 0.78rem; letter-spacing: 0.12em; color: #444; text-transform: uppercase; }
+    .dash-live   { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #555; }
+    .live-dot    { width: 7px; height: 7px; background: #c0392b; border-radius: 50%; animation: blink 1.4s step-start infinite; }
     @keyframes blink { 50% { opacity: 0; } }
-    .brand-name { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; color: #fff; }
-    .brand-sub  { font-size: 0.78rem; color: #555; letter-spacing: 0.04em; }
-    #logout-btn {
-      background: none; border: 1px solid #2a2a2a; border-radius: 8px;
-      color: #777; font-size: 0.82rem; padding: 7px 14px; cursor: pointer;
+    #last-updated { font-size: 0.75rem; color: #333; }
+
+    /* ── Stat grid ── */
+    .section-label {
+      font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #333; margin-bottom: 12px; margin-top: 28px;
     }
-    #logout-btn:hover { border-color: #444; color: #bbb; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    .content { padding: 28px 28px 60px; max-width: 1100px; margin: 0 auto; }
-
-    /* ── Stat cards ── */
-    .stats-row { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
     .stat-card {
-      flex: 1; min-width: 140px;
-      background: #111; border: 1px solid #1e1e1e; border-radius: 14px;
-      padding: 18px 20px;
+      background: #111; border: 1px solid #1c1c1c; border-radius: 16px;
+      padding: 22px 20px 20px;
     }
-    .stat-label { font-size: 0.75rem; color: #555; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
-    .stat-value.red { color: #c0392b; }
+    .stat-label { font-size: 0.72rem; color: #444; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 10px; }
+    .stat-big   { font-size: 3rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
+    .stat-big.accent { color: #c0392b; }
+    .stat-sub   { font-size: 0.78rem; color: #333; margin-top: 6px; }
 
-    /* ── Controls row ── */
-    .controls-row {
-      display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
+    /* ── Storage bar ── */
+    .storage-card {
+      background: #111; border: 1px solid #1c1c1c; border-radius: 16px;
+      padding: 22px 20px 20px; margin-top: 12px;
     }
-    #search-input {
-      flex: 1; min-width: 200px;
-      padding: 11px 16px; background: #1a1a1a;
-      border: 1px solid #2a2a2a; border-radius: 10px;
-      color: #f0f0f0; font-size: 0.9rem; outline: none;
-    }
-    #search-input:focus { border-color: #555; }
-    #search-input::placeholder { color: #444; }
-    .ctrl-btn {
-      padding: 11px 18px; background: #1a1a1a;
-      border: 1px solid #2a2a2a; border-radius: 10px;
-      color: #bbb; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
-    }
-    .ctrl-btn:hover { border-color: #444; color: #fff; }
-    .ctrl-btn.red { background: rgba(192,57,43,0.12); border-color: rgba(192,57,43,0.3); color: #c0392b; }
+    .storage-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+    .storage-used   { font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .storage-limit  { font-size: 0.78rem; color: #333; }
+    .bar-track { height: 6px; background: #1c1c1c; border-radius: 3px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 3px; background: #c0392b; transition: width 0.6s ease; }
+    .bar-fill.ok     { background: #27ae60; }
+    .bar-fill.warn   { background: #f39c12; }
+    .bar-fill.danger { background: #c0392b; }
+    .storage-note { font-size: 0.72rem; color: #333; margin-top: 8px; }
 
-    /* ── Table ── */
-    .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid #1e1e1e; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    thead { background: #111; }
-    thead th {
-      text-align: left; padding: 13px 16px;
-      color: #555; font-size: 0.75rem; letter-spacing: 0.07em; text-transform: uppercase;
-      border-bottom: 1px solid #1e1e1e;
-      user-select: none; cursor: pointer;
+    /* ── Refresh ── */
+    #refresh-btn {
+      background: none; border: 1px solid #1c1c1c; border-radius: 9px;
+      color: #333; font-size: 0.8rem; padding: 7px 13px; cursor: pointer;
+      transition: all 0.15s;
     }
-    thead th:hover { color: #aaa; }
-    thead th .sort-arrow { margin-left: 4px; opacity: 0.5; }
-    tbody tr { border-bottom: 1px solid #161616; transition: background 0.1s; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: #141414; }
-    tbody td { padding: 13px 16px; color: #ccc; vertical-align: middle; }
-    tbody td.num { color: #444; font-size: 0.78rem; }
-    tbody td.name { color: #f0f0f0; font-weight: 500; }
-    tbody td.email { color: #888; font-family: monospace; font-size: 0.83rem; }
-    tbody td.date { color: #666; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    #refresh-btn:hover { border-color: #333; color: #888; }
 
-    .action-btn {
-      padding: 6px 12px; border-radius: 7px; font-size: 0.78rem;
-      border: none; cursor: pointer; font-weight: 500;
-    }
-    .preview-btn { background: rgba(255,255,255,0.07); color: #ccc; margin-right: 6px; }
-    .preview-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    .delete-btn { background: rgba(192,57,43,0.1); color: #c0392b; }
-    .delete-btn:hover { background: rgba(192,57,43,0.22); }
-
-    .no-results { text-align: center; padding: 48px 20px; color: #444; font-size: 0.9rem; }
-
-    /* ── Video modal ── */
-    #modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.88); z-index: 200;
-      align-items: center; justify-content: center; padding: 24px;
-    }
-    #modal-overlay.active { display: flex; }
-    #modal-box {
-      background: #111; border: 1px solid #222; border-radius: 18px;
-      width: 100%; max-width: 420px; padding: 24px;
-    }
-    #modal-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
-    #modal-email { font-size: 0.82rem; color: #666; font-family: monospace; margin-bottom: 16px; }
-    #modal-video {
-      width: 100%; aspect-ratio: 1/1; border-radius: 12px;
-      background: #000; display: block; object-fit: cover;
-    }
-    #modal-date { font-size: 0.78rem; color: #444; margin-top: 10px; text-align: right; }
-    #modal-close {
-      width: 100%; margin-top: 16px; padding: 13px;
-      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;
-      color: #bbb; font-size: 0.9rem; cursor: pointer;
-    }
-    #modal-close:hover { border-color: #444; color: #fff; }
-
-    /* ── Loading/empty states ── */
-    .loading-row { text-align: center; padding: 40px; color: #444; }
-    .dot-pulse::after { content: ''; animation: dots 1.2s steps(3, end) infinite; }
-    @keyframes dots { 0%,100%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
-
-    /* ── Confirm dialog ── */
-    #confirm-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.88); z-index: 300;
-      align-items: center; justify-content: center; padding: 24px;
-    }
-    #confirm-overlay.active { display: flex; }
-    #confirm-box {
-      background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
-      width: 100%; max-width: 340px; padding: 28px 24px; text-align: center;
-    }
-    #confirm-box h3 { font-size: 1.05rem; margin-bottom: 8px; }
-    #confirm-box p  { font-size: 0.85rem; color: #666; margin-bottom: 24px; line-height: 1.6; }
-    .confirm-btns { display: flex; gap: 10px; }
-    #confirm-yes {
-      flex: 1; padding: 13px; background: #c0392b;
-      border: none; border-radius: 10px; color: #fff; font-size: 0.9rem; cursor: pointer;
-    }
-    #confirm-no  {
-      flex: 1; padding: 13px; background: #1a1a1a;
-      border: 1px solid #2a2a2a; border-radius: 10px; color: #bbb; font-size: 0.9rem; cursor: pointer;
+    /* ── Error banner ── */
+    #error-banner {
+      display: none; background: rgba(192,57,43,0.12); border: 1px solid rgba(192,57,43,0.3);
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;
+      font-size: 0.82rem; color: #e74c3c; line-height: 1.5;
     }
   </style>
 </head>
 <body>
 
-<!-- ── Login gate ───────────────────────────────────── -->
+<!-- ── Login ── -->
 <div id="login-screen">
-  <h1>⏱ TIME CAPSULE</h1>
-  <p class="sub">Staff Admin · Gotcha Matcha</p>
+  <div class="brand-title">⏱ TIME CAPSULE</div>
+  <div class="brand-sub">STAFF DASHBOARD · GOTCHA MATCHA</div>
   <div id="login-box">
     <input type="password" id="pw-input" placeholder="Staff password" autocomplete="current-password">
     <button id="login-btn" onclick="doLogin()">Enter →</button>
-    <p id="login-err"></p>
+    <div id="login-err"></div>
   </div>
 </div>
 
-<!-- ── Dashboard ────────────────────────────────────── -->
+<!-- ── Dashboard ── -->
 <div id="dashboard">
-  <header>
-    <div class="brand">
-      <div class="brand-dot"></div>
-      <div>
-        <div class="brand-name">TIME CAPSULE · ADMIN</div>
-        <div class="brand-sub">Gotcha Matcha · Takashimaya</div>
-      </div>
-    </div>
-    <button id="logout-btn" onclick="doLogout()">Log out</button>
-  </header>
-
-  <div class="content">
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Total Submissions</div>
-        <div class="stat-value red" id="stat-total">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Recorded Today</div>
-        <div class="stat-value" id="stat-today">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Est. Storage Used</div>
-        <div class="stat-value" id="stat-storage">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Last Submission</div>
-        <div class="stat-value" id="stat-last" style="font-size:1rem; padding-top:4px;">—</div>
-      </div>
-    </div>
-
-    <!-- Controls -->
-    <div class="controls-row">
-      <input type="search" id="search-input" placeholder="🔍  Search by name or email…" oninput="filterTable()">
-      <button class="ctrl-btn" onclick="loadData()">↻ Refresh</button>
-      <button class="ctrl-btn" onclick="exportCSV()">↓ Export CSV</button>
-    </div>
-
-    <!-- Table -->
-    <div class="table-wrap">
-      <table id="data-table">
-        <thead>
-          <tr>
-            <th onclick="sortBy('idx')">#</th>
-            <th onclick="sortBy('name')">Name <span class="sort-arrow">↕</span></th>
-            <th onclick="sortBy('email')">Email <span class="sort-arrow">↕</span></th>
-            <th onclick="sortBy('created_at')">Recorded <span class="sort-arrow">↕</span></th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <tr><td colspan="5" class="loading-row"><span class="dot-pulse">Loading</span></td></tr>
-        </tbody>
-      </table>
+  <div class="dash-header">
+    <div class="dash-title">TIME CAPSULE · ADMIN</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button id="refresh-btn" onclick="loadStats()">↻ Refresh</button>
+      <div class="dash-live"><div class="live-dot"></div> Live</div>
     </div>
   </div>
-</div>
 
-<!-- ── Video preview modal ───────────────────────────── -->
-<div id="modal-overlay" onclick="closeModal(event)">
-  <div id="modal-box">
-    <div id="modal-name"></div>
-    <div id="modal-email"></div>
-    <video id="modal-video" controls playsinline webkit-playsinline autoplay></video>
-    <div id="modal-date"></div>
-    <button id="modal-close" onclick="closeModal()">Close</button>
-  </div>
-</div>
+  <div id="error-banner"></div>
 
-<!-- ── Delete confirmation ───────────────────────────── -->
-<div id="confirm-overlay">
-  <div id="confirm-box">
-    <h3>Delete this capsule?</h3>
-    <p id="confirm-msg">This will permanently delete the record and video. This cannot be undone.</p>
-    <div class="confirm-btns">
-      <button id="confirm-yes" onclick="confirmDelete()">Yes, delete</button>
-      <button id="confirm-no"  onclick="closeConfirm()">Cancel</button>
+  <!-- Link clicks -->
+  <div class="section-label">Link Clicks</div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Today</div>
+      <div class="stat-big accent" id="clicks-today">—</div>
+      <div class="stat-sub">people opened the link</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">All Time</div>
+      <div class="stat-big" id="clicks-total">—</div>
+      <div class="stat-sub">total opens</div>
     </div>
   </div>
+
+  <!-- Uploads -->
+  <div class="section-label">Capsules Recorded</div>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Today</div>
+      <div class="stat-big accent" id="uploads-today">—</div>
+      <div class="stat-sub">videos saved today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">All Time</div>
+      <div class="stat-big" id="uploads-total">—</div>
+      <div class="stat-sub">capsules sealed</div>
+    </div>
+  </div>
+
+  <!-- Storage -->
+  <div class="section-label">Storage</div>
+  <div class="storage-card">
+    <div class="storage-header">
+      <div class="storage-used"><span id="storage-used">—</span></div>
+      <div class="storage-limit">of 100 GB available</div>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill ok" id="storage-bar" style="width:0%"></div>
+    </div>
+    <div class="storage-note" id="storage-note">Estimated at ~4 MB per video</div>
+  </div>
+
+  <div id="last-updated" style="margin-top:20px;text-align:right;"></div>
 </div>
 
 <script>
-  // ── Config ────────────────────────────────────────────
-  var SUPABASE_URL = 'https://tbkfwemzrurbdjapxyhm.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga';
-
-  // Change this password to something only your staff know
+  var SUPABASE_URL   = 'https://tbkfwemzrurbdjapxyhm.supabase.co';
+  var SUPABASE_KEY   = 'sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga';
   var ADMIN_PASSWORD = 'matcha2026';
+  var STORAGE_LIMIT_GB = 100; // Supabase Pro storage limit
 
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── State ─────────────────────────────────────────────
-  var allRows       = [];
-  var filteredRows  = [];
-  var sortCol       = 'created_at';
-  var sortAsc       = false;
-  var pendingDelete = null; // { email, file_path }
-
-  // ── Auth ──────────────────────────────────────────────
+  // ── Auth ─────────────────────────────────────────────
   function doLogin() {
-    var pw = document.getElementById('pw-input').value;
-    if (pw === ADMIN_PASSWORD) {
+    if (document.getElementById('pw-input').value === ADMIN_PASSWORD) {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('dashboard').style.display    = 'block';
-      loadData();
+      loadStats();
     } else {
       document.getElementById('login-err').textContent = 'Incorrect password.';
       document.getElementById('pw-input').value = '';
-      document.getElementById('pw-input').focus();
     }
   }
-  function doLogout() {
-    document.getElementById('dashboard').style.display    = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('pw-input').value = '';
-  }
-
-  // Allow Enter key on password field
   document.getElementById('pw-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doLogin();
   });
 
-  // ── Data loading ──────────────────────────────────────
-  function loadData() {
-    document.getElementById('table-body').innerHTML =
-      '<tr><td colspan="5" class="loading-row"><span class="dot-pulse">Loading</span></td></tr>';
-
-    sb.from('capsules')
-      .select('name, email, file_path, created_at')
-      .order('created_at', { ascending: false })
-      .then(function(res) {
-        if (res.error) { showTableError(res.error.message); return; }
-        allRows = res.data || [];
-        updateStats();
-        filterTable();
-      })
-      .catch(function(err) { showTableError(err.message || 'Failed to load data.'); });
-  }
-
-  function updateStats() {
-    var total = allRows.length;
-    document.getElementById('stat-total').textContent = total;
-
-    // Count today's entries
-    var today = new Date().toDateString();
-    var todayCount = allRows.filter(function(r) {
-      return r.created_at && new Date(r.created_at).toDateString() === today;
-    }).length;
-    document.getElementById('stat-today').textContent = todayCount;
-
-    // Rough storage estimate (avg 4 MB per video)
-    var mb = total * 4;
-    document.getElementById('stat-storage').textContent = mb >= 1000
-      ? (mb / 1024).toFixed(1) + ' GB'
-      : mb + ' MB';
-
-    // Most recent
-    if (allRows.length > 0 && allRows[0].created_at) {
-      var d = new Date(allRows[0].created_at);
-      document.getElementById('stat-last').textContent =
-        d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' }) + ' ' +
-        d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' });
-    } else {
-      document.getElementById('stat-last').textContent = 'None yet';
-    }
-  }
-
-  function showTableError(msg) {
-    document.getElementById('table-body').innerHTML =
-      '<tr><td colspan="5" class="no-results">⚠ ' + escHtml(msg) + '</td></tr>';
-  }
-
-  // ── Search + filter ───────────────────────────────────
-  function filterTable() {
-    var q = (document.getElementById('search-input').value || '').toLowerCase().trim();
-    filteredRows = q
-      ? allRows.filter(function(r) {
-          return (r.name  || '').toLowerCase().includes(q) ||
-                 (r.email || '').toLowerCase().includes(q);
-        })
-      : allRows.slice();
-    sortTable();
-  }
-
-  // ── Sort ──────────────────────────────────────────────
-  function sortBy(col) {
-    if (sortCol === col) { sortAsc = !sortAsc; }
-    else { sortCol = col; sortAsc = col !== 'created_at'; }
-    sortTable();
-  }
-
-  function sortTable() {
-    filteredRows.sort(function(a, b) {
-      var va = sortCol === 'idx' ? allRows.indexOf(a) : (a[sortCol] || '');
-      var vb = sortCol === 'idx' ? allRows.indexOf(b) : (b[sortCol] || '');
-      if (va < vb) return sortAsc ? -1 : 1;
-      if (va > vb) return sortAsc ? 1 : -1;
-      return 0;
+  // ── Load stats ────────────────────────────────────────
+  function loadStats() {
+    // Reset to loading state
+    ['clicks-today','clicks-total','uploads-today','uploads-total'].forEach(function(id) {
+      document.getElementById(id).textContent = '…';
     });
-    renderTable();
-  }
+    document.getElementById('error-banner').style.display = 'none';
 
-  // ── Render ────────────────────────────────────────────
-  function renderTable() {
-    var tbody = document.getElementById('table-body');
-    if (filteredRows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="no-results">No submissions found.</td></tr>';
-      return;
-    }
+    var todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    var todayISO = todayStart.toISOString();
 
-    var html = '';
-    filteredRows.forEach(function(row, i) {
-      var globalIdx = allRows.length - allRows.indexOf(row);
-      var dateStr   = row.created_at
-        ? new Date(row.created_at).toLocaleString('en-SG', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          })
-        : '—';
+    // Run all 4 queries in parallel
+    Promise.all([
+      // Total clicks
+      sb.from('visits').select('*', { count: 'exact', head: true }),
+      // Today's clicks
+      sb.from('visits').select('*', { count: 'exact', head: true }).gte('visited_at', todayISO),
+      // Total uploads
+      sb.from('capsules').select('*', { count: 'exact', head: true }),
+      // Today's uploads
+      sb.from('capsules').select('*', { count: 'exact', head: true }).gte('created_at', todayISO)
+    ]).then(function(results) {
+      var errors = results.filter(function(r) { return r.error; });
+      if (errors.length > 0) {
+        showError(errors[0].error.message);
+        return;
+      }
 
-      // Pass index only — no JSON in onclick attributes
-      html += '<tr>' +
-        '<td class="num">' + globalIdx + '</td>' +
-        '<td class="name">' + escHtml(row.name || '—') + '</td>' +
-        '<td class="email">' + escHtml(row.email || '—') + '</td>' +
-        '<td class="date">' + dateStr + '</td>' +
-        '<td>' +
-          '<button class="action-btn preview-btn" onclick="openPreview(' + i + ')">▶ Preview</button>' +
-          '<button class="action-btn delete-btn" onclick="askDelete(' + i + ')">Delete</button>' +
-        '</td>' +
-      '</tr>';
-    });
-    tbody.innerHTML = html;
-  }
+      var clicksTotal  = results[0].count || 0;
+      var clicksToday  = results[1].count || 0;
+      var uploadsTotal = results[2].count || 0;
+      var uploadsToday = results[3].count || 0;
 
-  // ── Video preview ─────────────────────────────────────
-  function openPreview(idx) {
-    var row = filteredRows[idx];
-    if (!row) return;
-    var vid = document.getElementById('modal-video');
-    var url = sb.storage.from('Videos').getPublicUrl(row.file_path).data.publicUrl;
+      document.getElementById('clicks-total').textContent  = clicksTotal;
+      document.getElementById('clicks-today').textContent  = clicksToday;
+      document.getElementById('uploads-total').textContent = uploadsTotal;
+      document.getElementById('uploads-today').textContent = uploadsToday;
 
-    document.getElementById('modal-name').textContent  = row.name  || '—';
-    document.getElementById('modal-email').textContent = row.email || '—';
-    document.getElementById('modal-date').textContent  = row.created_at
-      ? 'Recorded ' + new Date(row.created_at).toLocaleString('en-SG', { dateStyle: 'medium', timeStyle: 'short' })
-      : '';
+      // Storage estimate
+      var usedMB  = uploadsTotal * 4;
+      var usedGB  = usedMB / 1024;
+      var pct     = Math.min(100, (usedGB / STORAGE_LIMIT_GB) * 100);
+      var bar     = document.getElementById('storage-bar');
+      var display = usedMB >= 1024 ? usedGB.toFixed(2) + ' GB' : usedMB + ' MB';
 
-    vid.src = url;
-    vid.load();
-    vid.play().catch(function() {});
-    document.getElementById('modal-overlay').classList.add('active');
-  }
+      document.getElementById('storage-used').textContent = display;
+      bar.style.width = pct.toFixed(1) + '%';
+      bar.className   = 'bar-fill ' + (pct > 80 ? 'danger' : pct > 50 ? 'warn' : 'ok');
+      document.getElementById('storage-note').textContent =
+        'Est. ' + display + ' used · ~4 MB per video · ' + (STORAGE_LIMIT_GB - usedGB).toFixed(1) + ' GB remaining';
 
-  function closeModal(e) {
-    if (e && e.target !== document.getElementById('modal-overlay') &&
-        e.target !== document.getElementById('modal-close')) return;
-    document.getElementById('modal-video').pause();
-    document.getElementById('modal-video').src = '';
-    document.getElementById('modal-overlay').classList.remove('active');
-  }
+      // Timestamp
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  // ── Delete ────────────────────────────────────────────
-  function askDelete(idx) {
-    pendingDelete = filteredRows[idx];
-    if (!pendingDelete) return;
-    document.getElementById('confirm-msg').textContent =
-      'Delete "' + (pendingDelete.name || pendingDelete.email) + '"? This cannot be undone.';
-    document.getElementById('confirm-overlay').classList.add('active');
-  }
-
-  function closeConfirm() {
-    pendingDelete = null;
-    document.getElementById('confirm-overlay').classList.remove('active');
-  }
-
-  function confirmDelete() {
-    if (!pendingDelete) return;
-    var row = pendingDelete;
-    closeConfirm();
-
-    // Delete video from storage
-    sb.storage.from('Videos').remove([row.file_path]).then(function() {
-      // Delete DB record
-      return sb.from('capsules').delete().eq('email', row.email);
-    }).then(function(res) {
-      if (res && res.error) { alert('Delete failed: ' + res.error.message); return; }
-      // Remove from local state and re-render
-      allRows = allRows.filter(function(r) { return r.email !== row.email; });
-      updateStats();
-      filterTable();
     }).catch(function(err) {
-      alert('Delete failed: ' + (err.message || 'Unknown error'));
+      showError(err.message || 'Failed to load stats.');
     });
   }
 
-  // ── Export CSV ────────────────────────────────────────
-  function exportCSV() {
-    if (allRows.length === 0) { alert('No data to export.'); return; }
-    var header = ['Name', 'Email', 'File Path', 'Recorded At'];
-    var rows   = allRows.map(function(r) {
-      return [
-        csvCell(r.name),
-        csvCell(r.email),
-        csvCell(r.file_path),
-        csvCell(r.created_at ? new Date(r.created_at).toLocaleString('en-SG') : '')
-      ].join(',');
+  function showError(msg) {
+    var b = document.getElementById('error-banner');
+    b.textContent = '⚠ ' + msg + ' — Make sure the Supabase SQL policies are in place.';
+    b.style.display = 'block';
+    ['clicks-today','clicks-total','uploads-today','uploads-total'].forEach(function(id) {
+      document.getElementById(id).textContent = '—';
     });
-    var csv  = [header.join(',')].concat(rows).join('\r\n');
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href   = url;
-    a.download = 'timecapsule-submissions-' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
-  function csvCell(v) {
-    var s = String(v || '').replace(/"/g, '""');
-    return /[,"\n]/.test(s) ? '"' + s + '"' : s;
-  }
-
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  // Auto-refresh every 60 seconds
+  setInterval(function() {
+    if (document.getElementById('dashboard').style.display !== 'none') loadStats();
+  }, 60000);
 </script>
 </body>
 </html>

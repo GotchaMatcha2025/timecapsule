@@ -331,6 +331,9 @@
     'sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga'
   );
 
+  // Log page visit for dashboard click tracking
+  sb.from('visits').insert({}).catch(function() {});
+
   var stream       = null;
   var recorder     = null;
   var chunks       = [];
