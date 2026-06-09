@@ -285,7 +285,7 @@
       return;
     }
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480, max: 640 }, height: { ideal: 480, max: 640 } }, audio: true })
       .catch(function(err) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           return Promise.reject(err);
