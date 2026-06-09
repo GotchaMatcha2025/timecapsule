@@ -84,23 +84,12 @@
     }
     .timer-bar { height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
     .timer-fill { height: 100%; width: 0%; background: #c0392b; border-radius: 2px; transition: width 0.1s linear; }
-    .timer-row  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .timer-row  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .timer-count { font-size: 2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
     .timer-count.urgent { color: #e74c3c; }
     .rec-dot { width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; display: none; animation: blink 1s step-start infinite; }
     .rec-dot.active { display: inline-block; }
     @keyframes blink { 50% { opacity: 0; } }
-
-    /* Mic level bars — hidden; meter is now drawn on canvas */
-    .mic-level { display: none; }
-    .mic-bar   { display: none; }
-
-
-    /* Upload progress */
-    .upload-progress { width: 100%; margin-top: 20px; }
-    .upload-bar-bg { height: 6px; background: #2a2a2a; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
-    .upload-bar-fill { height: 100%; width: 0%; background: #c0392b; border-radius: 3px; transition: width 0.2s ease; }
-    .upload-pct { font-size: 0.85rem; color: #666; text-align: center; }
 
     video#playback, video#watch-video {
       width: 100%; border-radius: 14px; background: #111;
@@ -113,27 +102,6 @@
 
     .toggle { text-align: center; margin-top: 24px; color: #555; font-size: 0.9rem; }
     .toggle a { color: #888; cursor: pointer; text-decoration: underline; }
-
-    .consent-label {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-top: 8px;
-      cursor: pointer;
-    }
-    .consent-label input[type="checkbox"] {
-      width: 20px; height: 20px;
-      flex-shrink: 0;
-      margin-top: 2px;
-      accent-color: #c0392b;
-      cursor: pointer;
-    }
-    .consent-label span {
-      font-size: 0.82rem;
-      color: #666;
-      line-height: 1.5;
-    }
-    .consent-label a { color: #999; text-decoration: underline; }
 
     .permission-box {
       background: #1a1a1a; border: 1px solid #2a2a2a;
@@ -151,37 +119,20 @@
   <p class="sub">Record a 15-second message to your future self. In one year, you'll receive it back.</p>
   <input type="text"  id="name"  placeholder="Your name"  autocomplete="name">
   <input type="email" id="email" placeholder="Your email" autocomplete="email" inputmode="email">
-  <label class="consent-label">
-    <input type="checkbox" id="consent" onchange="toggleStartBtn()">
-    <span>I have read and agree to the <a href="terms.html" target="_blank">Data Consent & Terms of Use</a>, including the collection of my personal data and the potential use of my video in marketing materials.</span>
-  </label>
   <div class="spacer"></div>
-  <button class="btn btn-primary" id="start-btn" onclick="goToCamera()" disabled>Start Recording →</button>
+  <button class="btn btn-primary" id="start-btn" onclick="goToCamera()">Start Recording →</button>
   <div class="toggle"><a onclick="show('s-retrieve')">Already recorded? Retrieve your video</a></div>
 </div>
 
 <!-- ── Screen 2: Camera ─────────────────────────────── -->
 <div id="s-camera" class="screen">
   <video id="preview" autoplay muted playsinline webkit-playsinline x5-playsinline></video>
-  <div style="position:relative; flex-shrink:0;">
-    <canvas id="retro-canvas"></canvas>
-
-  </div>
+  <canvas id="retro-canvas"></canvas>
   <div class="camera-controls">
     <div class="timer-bar"><div id="timer-fill" class="timer-fill"></div></div>
     <div class="timer-row">
       <div id="timer-count" class="timer-count">15</div>
       <span id="rec-dot" class="rec-dot"></span>
-    </div>
-    <div class="mic-level" id="mic-level">
-      <div class="mic-bar" id="mb0"></div>
-      <div class="mic-bar" id="mb1"></div>
-      <div class="mic-bar" id="mb2"></div>
-      <div class="mic-bar" id="mb3"></div>
-      <div class="mic-bar" id="mb4"></div>
-      <div class="mic-bar" id="mb5"></div>
-      <div class="mic-bar" id="mb6"></div>
-      <div class="mic-bar" id="mb7"></div>
     </div>
     <button id="record-btn" class="btn btn-primary" onclick="startRecording()">● Record</button>
   </div>
@@ -230,11 +181,7 @@
 <div id="s-review" class="screen">
   <h1>Preview</h1>
   <p class="sub">Happy with it? Hit save — otherwise record again.</p>
-  <video id="playback" controls playsinline webkit-playsinline muted autoplay loop></video>
-  <div id="playback-fallback" style="display:none; width:100%; aspect-ratio:1/1; border-radius:14px; background:#111; margin:16px 0; align-items:center; justify-content:center; flex-direction:column; gap:8px;">
-    <span style="font-size:2rem;">🎬</span>
-    <span style="font-size:0.85rem; color:#666;">Video recorded successfully</span>
-  </div>
+  <video id="playback" controls playsinline></video>
   <div class="spacer"></div>
   <button class="btn btn-primary" onclick="submitVideo()">Save My Time Capsule</button>
   <button class="btn btn-secondary" onclick="reRecord()">Re-record</button>
@@ -246,10 +193,6 @@
   <div class="icon">⏳</div>
   <h1>Saving…</h1>
   <p class="sub">Please keep this screen open.</p>
-  <div class="upload-progress">
-    <div class="upload-bar-bg"><div id="upload-bar-fill" class="upload-bar-fill"></div></div>
-    <div class="upload-pct" id="upload-pct">0%</div>
-  </div>
   <div class="spacer"></div>
 </div>
 
@@ -257,8 +200,8 @@
 <div id="s-success" class="screen center">
   <div class="spacer"></div>
   <div class="icon">💌</div>
-  <h1 id="success-title">Sealed.</h1>
-  <p class="sub" id="success-msg">Your time capsule is saved.<br>We'll send it back to you in one year.</p>
+  <h1>Sealed.</h1>
+  <p class="sub">Your time capsule is saved.<br>We'll send it back to you in one year.</p>
   <div class="spacer"></div>
 </div>
 
@@ -299,25 +242,12 @@
   <div class="spacer"></div>
 </div>
 
-<!-- ── Screen 11: Already recorded ─────────────────── -->
-<div id="s-duplicate" class="screen center">
-  <div class="spacer"></div>
-  <div class="icon">🎞️</div>
-  <h1>You're already in the capsule.</h1>
-  <p class="sub">Imperfection is part of the process — your first take is the most honest one. It's already sealed and waiting for you in one year.</p>
-  <div class="spacer"></div>
-  <button class="btn btn-secondary" onclick="show('s-entry')">← Go back</button>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   var sb = supabase.createClient(
     'https://tbkfwemzrurbdjapxyhm.supabase.co',
     'sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga'
   );
-
-  // Log page visit for dashboard click tracking
-  sb.from('visits').insert({}).catch(function() {});
 
   var stream       = null;
   var recorder     = null;
@@ -339,44 +269,14 @@
     if (!name)                return alert('Please enter your name.');
     if (!isValidEmail(email)) return alert('Please enter a valid email address.');
     userData = { name: name, email: email };
-
-    // Check if email already has a capsule
-    sb.from('capsules')
-      .select('email')
-      .eq('email', email.toLowerCase().trim())
-      .limit(1)
-      .then(function(res) {
-        if (res.data && res.data.length > 0) {
-          show('s-duplicate'); // already recorded
-        } else {
-          proceedToCamera();
-        }
-      })
-      .catch(function() {
-        proceedToCamera(); // on error just proceed
-      });
-  }
-
-  function proceedToCamera() {
     show('s-camera');
     startCamera();
-  }
-
-  function toggleStartBtn() {
-    var checked = document.getElementById('consent').checked;
-    document.getElementById('start-btn').disabled = !checked;
   }
 
   // ── Camera ───────────────────────────────────────────
   var canvasStream  = null;
   var frameLoop     = null;
   var MONTHS        = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  var wakeLock      = null;
-  var micAnimFrame  = null;
-  var micAnalyser   = null;
-  var micDataArr    = null;
-  var micPeak       = 0;      // peak-hold segment index
-  var micPeakHold   = 0;      // frame counter for peak hold
 
   function startCamera() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -385,7 +285,7 @@
       return;
     }
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480, max: 640 }, height: { ideal: 480, max: 640 } }, audio: true })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true })
       .catch(function(err) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           return Promise.reject(err);
@@ -398,7 +298,6 @@
         v.srcObject = stream;
         v.play().catch(function() {});
         v.onloadedmetadata = function() { startRetroCanvas(v, s); };
-        setupMicLevel(s);
       })
       .catch(function(err) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -416,202 +315,127 @@
     canvas.width  = 480;
     canvas.height = 480;
 
-    var W = 480, H = 480;
-    var M  = W * 0.04;
-    var fs = Math.round(W * 0.048);
-
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-    // ── Pre-compute constants (avoid allocations inside drawFrame) ──
-    var fontMain = 'bold ' + fs + 'px monospace';
-    var fontRec  = 'bold ' + Math.round(fs * 0.72) + 'px monospace';
-    var fontSm   = 'bold ' + Math.round(fs * 0.52) + 'px monospace';
-
-    // Pre-render scanlines once into an offscreen canvas
-    var scanCanvas = document.createElement('canvas');
-    scanCanvas.width = W; scanCanvas.height = H;
-    var sCtx = scanCanvas.getContext('2d');
-    sCtx.fillStyle = 'rgba(0,0,0,0.22)';
-    for (var sl = 0; sl < H; sl += 3) { sCtx.fillRect(0, sl, W, 1); }
-
-    // Pre-compute vignette gradient once
-    var vig = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.82);
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, 'rgba(0,0,0,0.6)');
-
-    // Pre-compute audio meter layout
-    var numSegs = 12;
-    var meterW  = W * 0.38;
-    var segGap  = Math.round(W * 0.006);
-    var segW    = (meterW - (numSegs - 1) * segGap) / numSegs;
-    var segH    = fs * 0.55;
-    var meterX  = W - M - meterW;
-    var meterY  = M + fs * 1.35;
-    var barY    = meterY + Math.round(fs * 0.18);
-
-    // Corner bracket coords pre-computed
-    var arm = W * 0.1;
-    var brackets = [
-      [M,     M,     arm, 0,   0,   arm],
-      [W-M,   M,    -arm, 0,   0,   arm],
-      [M,     H-M,   arm, 0,   0,  -arm],
-      [W-M,   H-M,  -arm, 0,   0,  -arm]
-    ];
 
     var flickerVal = 1;
 
     function drawFrame() {
-      // ── rAF is scheduled FIRST so a throw never kills the loop ──
-      frameLoop = requestAnimationFrame(drawFrame);
+      var W = canvas.width, H = canvas.height;
+      var M = W * 0.04; // margin
+      var fs = Math.round(W * 0.048);
 
-      try {
-        // Camera feed (center-crop, mirrored)
-        var vw   = videoEl.videoWidth  || W;
-        var vh   = videoEl.videoHeight || H;
-        var size = Math.min(vw, vh);
-        ctx.save();
-        ctx.scale(-1, 1);
-        ctx.drawImage(videoEl, (vw-size)/2, (vh-size)/2, size, size, -W, 0, W, H);
-        ctx.restore();
+      // ── Camera feed (center-crop, mirrored) ──
+      var vw   = videoEl.videoWidth  || W;
+      var vh   = videoEl.videoHeight || H;
+      var size = Math.min(vw, vh);
+      var sx   = (vw - size) / 2;
+      var sy   = (vh - size) / 2;
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoEl, sx, sy, size, size, -W, 0, W, H);
+      ctx.restore();
 
-        // Flicker
-        if (Math.random() < 0.06) flickerVal = 0.72 + Math.random() * 0.28;
-        else flickerVal += (1 - flickerVal) * 0.18;
-        ctx.fillStyle = 'rgba(0,0,0,' + ((1 - flickerVal) * 0.35).toFixed(3) + ')';
-        ctx.fillRect(0, 0, W, H);
+      // ── Flicker ──
+      if (Math.random() < 0.06) flickerVal = 0.72 + Math.random() * 0.28;
+      else flickerVal += (1 - flickerVal) * 0.18;
+      ctx.fillStyle = 'rgba(0,0,0,' + (1 - flickerVal) * 0.35 + ')';
+      ctx.fillRect(0, 0, W, H);
 
-        // Green tint + scanlines (single drawImage instead of 160 fillRects)
-        ctx.fillStyle = 'rgba(0,15,0,0.12)';
-        ctx.fillRect(0, 0, W, H);
-        ctx.drawImage(scanCanvas, 0, 0);
+      // ── Scanlines ──
+      ctx.fillStyle = 'rgba(0,15,0,0.12)';
+      ctx.fillRect(0, 0, W, H);
+      for (var y = 0; y < H; y += 3) {
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fillRect(0, y, W, 1);
+      }
 
-        // Vignette (pre-computed gradient)
-        ctx.fillStyle = vig;
-        ctx.fillRect(0, 0, W, H);
+      // ── Vignette ──
+      var vig = ctx.createRadialGradient(W/2,H/2,H*0.28, W/2,H/2,H*0.82);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.6)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, W, H);
 
-        // Corner brackets
-        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-        ctx.lineWidth   = 2.5;
-        ctx.lineCap     = 'square';
-        for (var b = 0; b < 4; b++) {
-          var c = brackets[b];
-          ctx.beginPath();
-          ctx.moveTo(c[0], c[1]); ctx.lineTo(c[0]+c[2], c[1]+c[3]);
-          ctx.moveTo(c[0], c[1]); ctx.lineTo(c[0]+c[4], c[1]+c[5]);
-          ctx.stroke();
-        }
-
-        // Centre reticle
-        var cx = W/2, cy = H/2, rLen = W*0.07, gap = W*0.035;
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-        ctx.lineWidth   = 1.5;
+      // ── Corner frame brackets ──
+      var arm = W * 0.1, t = 2.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+      ctx.lineWidth   = t;
+      ctx.lineCap     = 'square';
+      [
+        [M,     M,     arm, 0,   0,   arm],
+        [W-M,   M,    -arm, 0,   0,   arm],
+        [M,     H-M,   arm, 0,   0,  -arm],
+        [W-M,   H-M,  -arm, 0,   0,  -arm]
+      ].forEach(function(c) {
         ctx.beginPath();
-        ctx.arc(cx, cy, W*0.04, 0, Math.PI*2);
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[0]+c[2], c[1]+c[3]);
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[0]+c[4], c[1]+c[5]);
         ctx.stroke();
+      });
+
+      // ── Centre reticle ──
+      var cx = W/2, cy = H/2, rLen = W*0.07, gap = W*0.035;
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth   = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, W*0.04, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx - rLen, cy); ctx.lineTo(cx - gap, cy);
+      ctx.moveTo(cx + gap,  cy); ctx.lineTo(cx + rLen, cy);
+      ctx.moveTo(cx, cy - rLen); ctx.lineTo(cx, cy - gap);
+      ctx.moveTo(cx, cy + gap);  ctx.lineTo(cx, cy + rLen);
+      ctx.stroke();
+
+      // ── Timecode top-left ──
+      var now  = new Date();
+      var tc   = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+      ctx.font        = 'bold ' + fs + 'px monospace';
+      ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 5;
+      ctx.fillStyle   = 'rgba(220,255,220,0.92)';
+      ctx.fillText(tc, M, M + fs);
+
+      // ── Battery top-right ──
+      var bx = W - M - fs*2.2, by = M + fs*0.15, bw = fs*2, bh = fs*0.7;
+      ctx.strokeStyle = 'rgba(220,255,220,0.85)';
+      ctx.lineWidth   = 1.5;
+      ctx.strokeRect(bx, by, bw, bh);
+      ctx.fillStyle   = 'rgba(220,255,220,0.85)';
+      ctx.fillRect(bx+bw, by+bh*0.25, 3, bh*0.5);   // terminal nub
+      ctx.fillRect(bx+2, by+2, bw*0.75-2, bh-4);     // charge level
+
+      // ── REC badge top-left (below timecode, blinks when recording) ──
+      var isRec = recorder && recorder.state === 'recording';
+      if (!isRec || Math.floor(Date.now()/500) % 2 === 0) {
+        var rx = M, ry = M + fs*1.5, rw = fs*2.2, rh = fs*0.9;
+        ctx.fillStyle = isRec ? 'rgba(210,30,30,0.92)' : 'rgba(210,30,30,0.45)';
         ctx.beginPath();
-        ctx.moveTo(cx-rLen,cy); ctx.lineTo(cx-gap, cy);
-        ctx.moveTo(cx+gap, cy); ctx.lineTo(cx+rLen,cy);
-        ctx.moveTo(cx,cy-rLen); ctx.lineTo(cx,cy-gap);
-        ctx.moveTo(cx,cy+gap);  ctx.lineTo(cx,cy+rLen);
-        ctx.stroke();
-
-        var now = new Date();
-
-        // Timecode top-left
-        ctx.font        = fontMain;
-        ctx.shadowColor = 'rgba(0,0,0,0.9)';
-        ctx.shadowBlur  = 5;
-        ctx.fillStyle   = 'rgba(220,255,220,0.92)';
-        ctx.fillText(pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds()), M, M+fs);
-
-        // Battery top-right
-        var bx = W-M-fs*2.2, by = M+fs*0.15, bw = fs*2, bh = fs*0.7;
-        ctx.strokeStyle = 'rgba(220,255,220,0.85)';
-        ctx.lineWidth   = 1.5;
-        ctx.strokeRect(bx, by, bw, bh);
-        ctx.fillStyle   = 'rgba(220,255,220,0.85)';
-        ctx.fillRect(bx+bw, by+bh*0.25, 3, bh*0.5);
-        ctx.fillRect(bx+2, by+2, bw*0.75-2, bh-4);
-
-        // REC badge — use fillRect (roundRect unsupported on older Safari)
-        var isRec = recorder && recorder.state === 'recording';
-        if (!isRec || Math.floor(Date.now()/500) % 2 === 0) {
-          var rx = M, ry = M+fs*1.5, rw = fs*2.2, rh = fs*0.9;
-          ctx.fillStyle = isRec ? 'rgba(210,30,30,0.92)' : 'rgba(210,30,30,0.45)';
-          ctx.fillRect(rx, ry, rw, rh);
-          ctx.font      = fontRec;
-          ctx.fillStyle = '#fff';
-          ctx.shadowBlur = 0;
-          ctx.fillText('● REC', rx+rw*0.12, ry+rh*0.75);
-        }
-
-        // Date bottom-left
-        ctx.font      = fontMain;
-        ctx.fillStyle = 'rgba(200,255,200,0.88)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(MONTHS[now.getMonth()]+'. '+pad(now.getDate())+' '+now.getFullYear(), M, H-M-fs*0.2);
+        ctx.roundRect(rx, ry, rw, rh, 3);
+        ctx.fill();
+        ctx.font      = 'bold ' + Math.round(fs*0.72) + 'px monospace';
+        ctx.fillStyle = '#fff';
         ctx.shadowBlur = 0;
+        ctx.fillText('● REC', rx + rw*0.12, ry + rh*0.75);
+      }
 
-        // Audio meter (top-right, below battery)
-        if (micAnalyser && micDataArr) {
-          micAnalyser.getByteFrequencyData(micDataArr);
-          var aSum = 0;
-          for (var ai = 2; ai < 28; ai++) aSum += micDataArr[ai];
-          var aLevel  = Math.min(1, (aSum / (26 * 255)) * 3.2);
-          var litSegs = Math.round(aLevel * numSegs);
+      // ── Date bottom-left ──
+      var date = MONTHS[now.getMonth()] + '. ' + pad(now.getDate()) + ' ' + now.getFullYear();
+      ctx.font      = 'bold ' + fs + 'px monospace';
+      ctx.fillStyle = 'rgba(200,255,200,0.88)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(date, M, H - M - fs*0.2);
+      ctx.shadowBlur = 0;
 
-          if (litSegs >= micPeak) { micPeak = litSegs; micPeakHold = 28; }
-          else if (micPeakHold > 0) { micPeakHold--; }
-          else if (micPeak > 0)     { micPeak--; }
-
-          ctx.font      = fontSm;
-          ctx.fillStyle = 'rgba(200,255,200,0.70)';
-          ctx.shadowBlur = 3;
-          ctx.fillText('CH1', meterX, meterY);
-          ctx.shadowBlur = 0;
-
-          for (var sg = 0; sg < numSegs; sg++) {
-            var lit    = sg < litSegs;
-            var isPeak = sg === micPeak - 1 && micPeak > 0;
-            ctx.fillStyle = sg < 7
-              ? ((lit||isPeak) ? 'rgba(60,230,80,0.95)'  : 'rgba(60,230,80,0.10)')
-              : sg < 10
-              ? ((lit||isPeak) ? 'rgba(240,210,0,0.95)'  : 'rgba(240,210,0,0.10)')
-              :  ((lit||isPeak) ? 'rgba(255,55,55,0.95)'  : 'rgba(255,55,55,0.10)');
-            ctx.fillRect(meterX + sg*(segW+segGap), barY, segW, segH);
-          }
-        }
-
-      } catch(e) { /* silently ignore — loop continues via rAF above */ }
+      frameLoop = requestAnimationFrame(drawFrame);
     }
     drawFrame();
 
     // Record from canvas + original audio
-    // iOS Safari doesn't support captureStream — fall back to raw camera stream
     var audioTrack = cameraStream.getAudioTracks()[0];
-    if (typeof canvas.captureStream === 'function') {
-      canvasStream = canvas.captureStream(30);
-      if (audioTrack) canvasStream.addTrack(audioTrack);
-    } else {
-      // iOS fallback: record raw camera, canvas is display-only
-      canvasStream = cameraStream;
-    }
-  }
-
-  function setupMicLevel(mediaStream) {
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      var audioCtx = new AC();
-      var source   = audioCtx.createMediaStreamSource(mediaStream);
-      micAnalyser  = audioCtx.createAnalyser();
-      micAnalyser.fftSize = 512;
-      micAnalyser.smoothingTimeConstant = 0.6;
-      source.connect(micAnalyser);
-      micDataArr = new Uint8Array(micAnalyser.frequencyBinCount);
-      micPeak    = 0;
-      micPeakHold = 0;
-    } catch(e) { micAnalyser = null; micDataArr = null; }
+    canvasStream   = canvas.captureStream(30);
+    if (audioTrack) canvasStream.addTrack(audioTrack);
   }
 
   function showPermissionScreen() {
@@ -667,27 +491,14 @@
   }
 
   function stopStream() {
-    if (frameLoop)    { cancelAnimationFrame(frameLoop); frameLoop = null; }
-    if (micAnimFrame) { cancelAnimationFrame(micAnimFrame); micAnimFrame = null; }
-    micAnalyser = null; micDataArr = null; micPeak = 0; micPeakHold = 0;
+    if (frameLoop) { cancelAnimationFrame(frameLoop); frameLoop = null; }
     if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
     canvasStream = null;
   }
 
   function onRecordingDone() {
     recordedBlob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
-    var url = URL.createObjectURL(recordedBlob);
-    var vid = document.getElementById('playback');
-    var fb  = document.getElementById('playback-fallback');
-    vid.style.display = '';
-    fb.style.display  = 'none';
-    vid.src = url;
-    vid.load();
-    vid.play().catch(function() {});
-    vid.addEventListener('error', function() {
-      vid.style.display = 'none';
-      fb.style.display  = 'flex';
-    }, { once: true });
+    document.getElementById('playback').src = URL.createObjectURL(recordedBlob);
     stopStream();
     show('s-review');
   }
@@ -705,44 +516,24 @@
   }
 
   // ── Upload ───────────────────────────────────────────
-  function releaseWakeLock() {
-    if (wakeLock) { try { wakeLock.release(); } catch(e) {} wakeLock = null; }
-  }
-
   function submitVideo() {
     if (!recordedBlob) return;
     show('s-uploading');
-
-    if (navigator.wakeLock) {
-      navigator.wakeLock.request('screen').then(function(wl) { wakeLock = wl; }).catch(function() {});
-    }
 
     var ext      = (recordedBlob.type || '').indexOf('mp4') !== -1 ? 'mp4' : 'webm';
     var safeMail = userData.email.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
     var path     = safeMail + '/' + Date.now() + '.' + ext;
 
-    // Use Supabase SDK — handles the sb_publishable_ key format correctly
-    sb.storage.from('Videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm', upsert: false })
+    sb.storage.from('Videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm' })
       .then(function(res) {
         if (res.error) throw new Error(res.error.message);
-        return sb.from('capsules').upsert(
-          { name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path },
-          { onConflict: 'email' }
-        );
+        return sb.from('capsules').insert({ name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path });
       })
       .then(function(res) {
-        releaseWakeLock();
         if (res.error) throw new Error(res.error.message);
-
-        var firstName = userData.name.trim().split(/\s+/)[0];
-        var nextYear  = new Date().getFullYear() + 1;
-        document.getElementById('success-title').textContent = 'Sealed, ' + firstName + '.';
-        document.getElementById('success-msg').innerHTML =
-          'Your time capsule is saved.<br>See you in ' + nextYear + ', ' + firstName + '.';
         show('s-success');
       })
       .catch(function(err) {
-        releaseWakeLock();
         document.getElementById('error-msg').textContent = err.message || 'Upload failed. Please try again.';
         show('s-error');
       });
