@@ -91,9 +91,9 @@
     .rec-dot.active { display: inline-block; }
     @keyframes blink { 50% { opacity: 0; } }
 
-    /* Mic level bars */
-    .mic-level { display: flex; align-items: flex-end; gap: 3px; height: 24px; margin-bottom: 14px; }
-    .mic-bar { width: 4px; border-radius: 2px; background: #c0392b; transition: height 0.08s ease; min-height: 3px; }
+    /* Mic level bars — hidden; meter is now drawn on canvas */
+    .mic-level { display: none; }
+    .mic-bar   { display: none; }
 
     /* Countdown overlay */
     #countdown-overlay {
@@ -411,6 +411,10 @@
   var MONTHS        = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   var wakeLock      = null;
   var micAnimFrame  = null;
+  var micAnalyser   = null;
+  var micDataArr    = null;
+  var micPeak       = 0;      // peak-hold segment index
+  var micPeakHold   = 0;      // frame counter for peak hold
 
   function startCamera() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -563,6 +567,57 @@
       ctx.fillText(date, M, H - M - fs*0.2);
       ctx.shadowBlur = 0;
 
+      // ── Audio level meter (top-right, below battery) ──
+      if (micAnalyser && micDataArr) {
+        micAnalyser.getByteFrequencyData(micDataArr);
+
+        // Sum voice-range frequencies (roughly 80–3000 Hz)
+        var aSum = 0, ai;
+        for (ai = 2; ai < 28; ai++) aSum += micDataArr[ai];
+        var aLevel = Math.min(1, (aSum / (26 * 255)) * 3.2);
+
+        var numSegs = 12;
+        var meterW  = W * 0.38;
+        var segGap  = Math.round(W * 0.006);
+        var segW    = (meterW - (numSegs - 1) * segGap) / numSegs;
+        var segH    = fs * 0.55;
+        var meterX  = W - M - meterW;
+        var meterY  = M + fs * 1.35;   // just below battery
+
+        // "CH1" label
+        ctx.font      = 'bold ' + Math.round(fs * 0.52) + 'px monospace';
+        ctx.fillStyle = 'rgba(200,255,200,0.70)';
+        ctx.shadowBlur = 3;
+        ctx.fillText('CH1', meterX, meterY);
+        ctx.shadowBlur = 0;
+
+        // Peak-hold: advance peak to current level, then decay
+        var litSegs = Math.round(aLevel * numSegs);
+        if (litSegs >= micPeak) { micPeak = litSegs; micPeakHold = 28; }
+        else if (micPeakHold > 0) { micPeakHold--; }
+        else if (micPeak > 0)     { micPeak--; }
+
+        var barY = meterY + Math.round(fs * 0.18);
+        for (var sg = 0; sg < numSegs; sg++) {
+          var sgX = meterX + sg * (segW + segGap);
+          var lit = sg < litSegs;
+          var isPeak = (sg === micPeak - 1) && micPeak > 0;
+
+          if (sg < 7) {
+            ctx.fillStyle = (lit || isPeak) ? 'rgba(60,230,80,0.95)' : 'rgba(60,230,80,0.10)';
+          } else if (sg < 10) {
+            ctx.fillStyle = (lit || isPeak) ? 'rgba(240,210,0,0.95)'  : 'rgba(240,210,0,0.10)';
+          } else {
+            ctx.fillStyle = (lit || isPeak) ? 'rgba(255,55,55,0.95)'  : 'rgba(255,55,55,0.10)';
+          }
+
+          // Peak-hold segment glows slightly brighter
+          if (isPeak && !lit) ctx.fillStyle = ctx.fillStyle.replace('0.95', '1');
+
+          ctx.fillRect(sgX, barY, segW, segH);
+        }
+      }
+
       frameLoop = requestAnimationFrame(drawFrame);
     }
     drawFrame();
@@ -585,25 +640,14 @@
       if (!AC) return;
       var audioCtx = new AC();
       var source   = audioCtx.createMediaStreamSource(mediaStream);
-      var analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.75;
-      source.connect(analyser);
-      var dataArr = new Uint8Array(analyser.frequencyBinCount);
-      var bars    = [];
-      for (var i = 0; i < 8; i++) { bars.push(document.getElementById('mb' + i)); }
-      var step    = Math.floor(dataArr.length / 8);
-
-      function animMic() {
-        micAnimFrame = requestAnimationFrame(animMic);
-        analyser.getByteFrequencyData(dataArr);
-        for (var b = 0; b < 8; b++) {
-          var val = dataArr[b * step] / 255;
-          if (bars[b]) bars[b].style.height = Math.max(3, Math.round(val * 24)) + 'px';
-        }
-      }
-      animMic();
-    } catch(e) { /* mic bars are cosmetic, silently skip */ }
+      micAnalyser  = audioCtx.createAnalyser();
+      micAnalyser.fftSize = 512;
+      micAnalyser.smoothingTimeConstant = 0.6;
+      source.connect(micAnalyser);
+      micDataArr = new Uint8Array(micAnalyser.frequencyBinCount);
+      micPeak    = 0;
+      micPeakHold = 0;
+    } catch(e) { micAnalyser = null; micDataArr = null; }
   }
 
   function showPermissionScreen() {
@@ -661,7 +705,7 @@
   function stopStream() {
     if (frameLoop)    { cancelAnimationFrame(frameLoop); frameLoop = null; }
     if (micAnimFrame) { cancelAnimationFrame(micAnimFrame); micAnimFrame = null; }
-    for (var i = 0; i < 8; i++) { var b = document.getElementById('mb' + i); if (b) b.style.height = '3px'; }
+    micAnalyser = null; micDataArr = null; micPeak = 0; micPeakHold = 0;
     if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
     canvasStream = null;
   }
