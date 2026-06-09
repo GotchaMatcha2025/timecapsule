@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Time Capsule</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d0d0d;
+      color: #f0f0f0;
+      min-height: 100dvh;
+    }
+
+    /* ── Login gate ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 40px 24px;
+    }
+    #login-screen h1 { font-size: 1.4rem; margin-bottom: 6px; letter-spacing: 0.05em; }
+    #login-screen .sub { color: #555; font-size: 0.88rem; margin-bottom: 36px; }
+    #login-box { width: 100%; max-width: 340px; }
+    #login-box input {
+      width: 100%; padding: 16px; background: #1a1a1a;
+      border: 1px solid #2a2a2a; border-radius: 12px;
+      color: #f0f0f0; font-size: 1rem; margin-bottom: 12px;
+      outline: none; -webkit-appearance: none;
+    }
+    #login-box input:focus { border-color: #555; }
+    #login-btn {
+      width: 100%; padding: 16px; background: #c0392b;
+      border: none; border-radius: 12px; color: #fff;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    #login-err { color: #e74c3c; font-size: 0.85rem; margin-top: 10px; text-align: center; min-height: 20px; }
+
+    /* ── Dashboard ── */
+    #dashboard { display: none; }
+
+    header {
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-dot { width: 8px; height: 8px; background: #c0392b; border-radius: 50%; animation: blink 1.4s step-start infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .brand-name { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; color: #fff; }
+    .brand-sub  { font-size: 0.78rem; color: #555; letter-spacing: 0.04em; }
+    #logout-btn {
+      background: none; border: 1px solid #2a2a2a; border-radius: 8px;
+      color: #777; font-size: 0.82rem; padding: 7px 14px; cursor: pointer;
+    }
+    #logout-btn:hover { border-color: #444; color: #bbb; }
+
+    .content { padding: 28px 28px 60px; max-width: 1100px; margin: 0 auto; }
+
+    /* ── Stat cards ── */
+    .stats-row { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 140px;
+      background: #111; border: 1px solid #1e1e1e; border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .stat-label { font-size: 0.75rem; color: #555; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+    .stat-value { font-size: 2rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+    .stat-value.red { color: #c0392b; }
+
+    /* ── Controls row ── */
+    .controls-row {
+      display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
+    }
+    #search-input {
+      flex: 1; min-width: 200px;
+      padding: 11px 16px; background: #1a1a1a;
+      border: 1px solid #2a2a2a; border-radius: 10px;
+      color: #f0f0f0; font-size: 0.9rem; outline: none;
+    }
+    #search-input:focus { border-color: #555; }
+    #search-input::placeholder { color: #444; }
+    .ctrl-btn {
+      padding: 11px 18px; background: #1a1a1a;
+      border: 1px solid #2a2a2a; border-radius: 10px;
+      color: #bbb; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+    }
+    .ctrl-btn:hover { border-color: #444; color: #fff; }
+    .ctrl-btn.red { background: rgba(192,57,43,0.12); border-color: rgba(192,57,43,0.3); color: #c0392b; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid #1e1e1e; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead { background: #111; }
+    thead th {
+      text-align: left; padding: 13px 16px;
+      color: #555; font-size: 0.75rem; letter-spacing: 0.07em; text-transform: uppercase;
+      border-bottom: 1px solid #1e1e1e;
+      user-select: none; cursor: pointer;
+    }
+    thead th:hover { color: #aaa; }
+    thead th .sort-arrow { margin-left: 4px; opacity: 0.5; }
+    tbody tr { border-bottom: 1px solid #161616; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #141414; }
+    tbody td { padding: 13px 16px; color: #ccc; vertical-align: middle; }
+    tbody td.num { color: #444; font-size: 0.78rem; }
+    tbody td.name { color: #f0f0f0; font-weight: 500; }
+    tbody td.email { color: #888; font-family: monospace; font-size: 0.83rem; }
+    tbody td.date { color: #666; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+
+    .action-btn {
+      padding: 6px 12px; border-radius: 7px; font-size: 0.78rem;
+      border: none; cursor: pointer; font-weight: 500;
+    }
+    .preview-btn { background: rgba(255,255,255,0.07); color: #ccc; margin-right: 6px; }
+    .preview-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .delete-btn { background: rgba(192,57,43,0.1); color: #c0392b; }
+    .delete-btn:hover { background: rgba(192,57,43,0.22); }
+
+    .no-results { text-align: center; padding: 48px 20px; color: #444; font-size: 0.9rem; }
+
+    /* ── Video modal ── */
+    #modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88); z-index: 200;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    #modal-overlay.active { display: flex; }
+    #modal-box {
+      background: #111; border: 1px solid #222; border-radius: 18px;
+      width: 100%; max-width: 420px; padding: 24px;
+    }
+    #modal-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+    #modal-email { font-size: 0.82rem; color: #666; font-family: monospace; margin-bottom: 16px; }
+    #modal-video {
+      width: 100%; aspect-ratio: 1/1; border-radius: 12px;
+      background: #000; display: block; object-fit: cover;
+    }
+    #modal-date { font-size: 0.78rem; color: #444; margin-top: 10px; text-align: right; }
+    #modal-close {
+      width: 100%; margin-top: 16px; padding: 13px;
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;
+      color: #bbb; font-size: 0.9rem; cursor: pointer;
+    }
+    #modal-close:hover { border-color: #444; color: #fff; }
+
+    /* ── Loading/empty states ── */
+    .loading-row { text-align: center; padding: 40px; color: #444; }
+    .dot-pulse::after { content: ''; animation: dots 1.2s steps(3, end) infinite; }
+    @keyframes dots { 0%,100%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
+
+    /* ── Confirm dialog ── */
+    #confirm-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88); z-index: 300;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    #confirm-overlay.active { display: flex; }
+    #confirm-box {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+      width: 100%; max-width: 340px; padding: 28px 24px; text-align: center;
+    }
+    #confirm-box h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    #confirm-box p  { font-size: 0.85rem; color: #666; margin-bottom: 24px; line-height: 1.6; }
+    .confirm-btns { display: flex; gap: 10px; }
+    #confirm-yes {
+      flex: 1; padding: 13px; background: #c0392b;
+      border: none; border-radius: 10px; color: #fff; font-size: 0.9rem; cursor: pointer;
+    }
+    #confirm-no  {
+      flex: 1; padding: 13px; background: #1a1a1a;
+      border: 1px solid #2a2a2a; border-radius: 10px; color: #bbb; font-size: 0.9rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login gate ───────────────────────────────────── -->
+<div id="login-screen">
+  <h1>⏱ TIME CAPSULE</h1>
+  <p class="sub">Staff Admin · Gotcha Matcha</p>
+  <div id="login-box">
+    <input type="password" id="pw-input" placeholder="Staff password" autocomplete="current-password">
+    <button id="login-btn" onclick="doLogin()">Enter →</button>
+    <p id="login-err"></p>
+  </div>
+</div>
+
+<!-- ── Dashboard ────────────────────────────────────── -->
+<div id="dashboard">
+  <header>
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <div class="brand-name">TIME CAPSULE · ADMIN</div>
+        <div class="brand-sub">Gotcha Matcha · Takashimaya</div>
+      </div>
+    </div>
+    <button id="logout-btn" onclick="doLogout()">Log out</button>
+  </header>
+
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Submissions</div>
+        <div class="stat-value red" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Recorded Today</div>
+        <div class="stat-value" id="stat-today">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Est. Storage Used</div>
+        <div class="stat-value" id="stat-storage">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Submission</div>
+        <div class="stat-value" id="stat-last" style="font-size:1rem; padding-top:4px;">—</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-row">
+      <input type="search" id="search-input" placeholder="🔍  Search by name or email…" oninput="filterTable()">
+      <button class="ctrl-btn" onclick="loadData()">↻ Refresh</button>
+      <button class="ctrl-btn" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('idx')">#</th>
+            <th onclick="sortBy('name')">Name <span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('email')">Email <span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('created_at')">Recorded <span class="sort-arrow">↕</span></th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="5" class="loading-row"><span class="dot-pulse">Loading</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Video preview modal ───────────────────────────── -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <div id="modal-name"></div>
+    <div id="modal-email"></div>
+    <video id="modal-video" controls playsinline webkit-playsinline autoplay></video>
+    <div id="modal-date"></div>
+    <button id="modal-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- ── Delete confirmation ───────────────────────────── -->
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <h3>Delete this capsule?</h3>
+    <p id="confirm-msg">This will permanently delete the record and video. This cannot be undone.</p>
+    <div class="confirm-btns">
+      <button id="confirm-yes" onclick="confirmDelete()">Yes, delete</button>
+      <button id="confirm-no"  onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Config ────────────────────────────────────────────
+  var SUPABASE_URL = 'https://tbkfwemzrurbdjapxyhm.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_oLhnjVpyOdwGkYR9weW4NA_ihhbOxga';
+
+  // Change this password to something only your staff know
+  var ADMIN_PASSWORD = 'matcha2026';
+
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── State ─────────────────────────────────────────────
+  var allRows       = [];
+  var filteredRows  = [];
+  var sortCol       = 'created_at';
+  var sortAsc       = false;
+  var pendingDelete = null; // { email, file_path }
+
+  // ── Auth ──────────────────────────────────────────────
+  function doLogin() {
+    var pw = document.getElementById('pw-input').value;
+    if (pw === ADMIN_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display    = 'block';
+      loadData();
+    } else {
+      document.getElementById('login-err').textContent = 'Incorrect password.';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  }
+  function doLogout() {
+    document.getElementById('dashboard').style.display    = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('pw-input').value = '';
+  }
+
+  // Allow Enter key on password field
+  document.getElementById('pw-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // ── Data loading ──────────────────────────────────────
+  function loadData() {
+    document.getElementById('table-body').innerHTML =
+      '<tr><td colspan="5" class="loading-row"><span class="dot-pulse">Loading</span></td></tr>';
+
+    sb.from('capsules')
+      .select('name, email, file_path, created_at')
+      .order('created_at', { ascending: false })
+      .then(function(res) {
+        if (res.error) { showTableError(res.error.message); return; }
+        allRows = res.data || [];
+        updateStats();
+        filterTable();
+      })
+      .catch(function(err) { showTableError(err.message || 'Failed to load data.'); });
+  }
+
+  function updateStats() {
+    var total = allRows.length;
+    document.getElementById('stat-total').textContent = total;
+
+    // Count today's entries
+    var today = new Date().toDateString();
+    var todayCount = allRows.filter(function(r) {
+      return r.created_at && new Date(r.created_at).toDateString() === today;
+    }).length;
+    document.getElementById('stat-today').textContent = todayCount;
+
+    // Rough storage estimate (avg 4 MB per video)
+    var mb = total * 4;
+    document.getElementById('stat-storage').textContent = mb >= 1000
+      ? (mb / 1024).toFixed(1) + ' GB'
+      : mb + ' MB';
+
+    // Most recent
+    if (allRows.length > 0 && allRows[0].created_at) {
+      var d = new Date(allRows[0].created_at);
+      document.getElementById('stat-last').textContent =
+        d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' }) + ' ' +
+        d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' });
+    } else {
+      document.getElementById('stat-last').textContent = 'None yet';
+    }
+  }
+
+  function showTableError(msg) {
+    document.getElementById('table-body').innerHTML =
+      '<tr><td colspan="5" class="no-results">⚠ ' + escHtml(msg) + '</td></tr>';
+  }
+
+  // ── Search + filter ───────────────────────────────────
+  function filterTable() {
+    var q = (document.getElementById('search-input').value || '').toLowerCase().trim();
+    filteredRows = q
+      ? allRows.filter(function(r) {
+          return (r.name  || '').toLowerCase().includes(q) ||
+                 (r.email || '').toLowerCase().includes(q);
+        })
+      : allRows.slice();
+    sortTable();
+  }
+
+  // ── Sort ──────────────────────────────────────────────
+  function sortBy(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = col !== 'created_at'; }
+    sortTable();
+  }
+
+  function sortTable() {
+    filteredRows.sort(function(a, b) {
+      var va = sortCol === 'idx' ? allRows.indexOf(a) : (a[sortCol] || '');
+      var vb = sortCol === 'idx' ? allRows.indexOf(b) : (b[sortCol] || '');
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ? 1 : -1;
+      return 0;
+    });
+    renderTable();
+  }
+
+  // ── Render ────────────────────────────────────────────
+  function renderTable() {
+    var tbody = document.getElementById('table-body');
+    if (filteredRows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="no-results">No submissions found.</td></tr>';
+      return;
+    }
+
+    var html = '';
+    filteredRows.forEach(function(row, i) {
+      var globalIdx = allRows.length - allRows.indexOf(row);
+      var dateStr   = row.created_at
+        ? new Date(row.created_at).toLocaleString('en-SG', {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          })
+        : '—';
+
+      html += '<tr>' +
+        '<td class="num">' + globalIdx + '</td>' +
+        '<td class="name">' + escHtml(row.name || '—') + '</td>' +
+        '<td class="email">' + escHtml(row.email || '—') + '</td>' +
+        '<td class="date">' + dateStr + '</td>' +
+        '<td>' +
+          '<button class="action-btn preview-btn" onclick="openPreview(' + JSON.stringify(JSON.stringify(row)) + ')">▶ Preview</button>' +
+          '<button class="action-btn delete-btn" onclick="askDelete(' + JSON.stringify(JSON.stringify(row)) + ')">Delete</button>' +
+        '</td>' +
+      '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── Video preview ─────────────────────────────────────
+  function openPreview(rowJson) {
+    var row = JSON.parse(rowJson);
+    var vid = document.getElementById('modal-video');
+    var url = sb.storage.from('Videos').getPublicUrl(row.file_path).data.publicUrl;
+
+    document.getElementById('modal-name').textContent  = row.name  || '—';
+    document.getElementById('modal-email').textContent = row.email || '—';
+    document.getElementById('modal-date').textContent  = row.created_at
+      ? 'Recorded ' + new Date(row.created_at).toLocaleString('en-SG', { dateStyle: 'medium', timeStyle: 'short' })
+      : '';
+
+    vid.src = url;
+    vid.load();
+    document.getElementById('modal-overlay').classList.add('active');
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('modal-overlay') &&
+        e.target !== document.getElementById('modal-close')) return;
+    document.getElementById('modal-video').pause();
+    document.getElementById('modal-video').src = '';
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  // ── Delete ────────────────────────────────────────────
+  function askDelete(rowJson) {
+    pendingDelete = JSON.parse(rowJson);
+    document.getElementById('confirm-msg').textContent =
+      'Delete "' + (pendingDelete.name || pendingDelete.email) + '"? This cannot be undone.';
+    document.getElementById('confirm-overlay').classList.add('active');
+  }
+
+  function closeConfirm() {
+    pendingDelete = null;
+    document.getElementById('confirm-overlay').classList.remove('active');
+  }
+
+  function confirmDelete() {
+    if (!pendingDelete) return;
+    var row = pendingDelete;
+    closeConfirm();
+
+    // Delete video from storage
+    sb.storage.from('Videos').remove([row.file_path]).then(function() {
+      // Delete DB record
+      return sb.from('capsules').delete().eq('email', row.email);
+    }).then(function(res) {
+      if (res && res.error) { alert('Delete failed: ' + res.error.message); return; }
+      // Remove from local state and re-render
+      allRows = allRows.filter(function(r) { return r.email !== row.email; });
+      updateStats();
+      filterTable();
+    }).catch(function(err) {
+      alert('Delete failed: ' + (err.message || 'Unknown error'));
+    });
+  }
+
+  // ── Export CSV ────────────────────────────────────────
+  function exportCSV() {
+    if (allRows.length === 0) { alert('No data to export.'); return; }
+    var header = ['Name', 'Email', 'File Path', 'Recorded At'];
+    var rows   = allRows.map(function(r) {
+      return [
+        csvCell(r.name),
+        csvCell(r.email),
+        csvCell(r.file_path),
+        csvCell(r.created_at ? new Date(r.created_at).toLocaleString('en-SG') : '')
+      ].join(',');
+    });
+    var csv  = [header.join(',')].concat(rows).join('\r\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
+    a.download = 'timecapsule-submissions-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function csvCell(v) {
+    var s = String(v || '').replace(/"/g, '""');
+    return /[,"\n]/.test(s) ? '"' + s + '"' : s;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
