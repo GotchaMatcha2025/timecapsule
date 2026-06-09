@@ -564,7 +564,7 @@
     sb.storage.from('Videos').upload(path, recordedBlob, { contentType: recordedBlob.type || 'video/webm' })
       .then(function(res) {
         if (res.error) throw new Error(res.error.message);
-        return sb.from('capsules').insert({ name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path });
+        return sb.from('capsules').upsert({ name: userData.name, email: userData.email.toLowerCase().trim(), file_path: path }, { onConflict: 'email' });
       })
       .then(function(res) {
         if (res.error) throw new Error(res.error.message);
