@@ -126,26 +126,6 @@
       8%   { opacity: 0.95; }
       100% { transform: translateY(112vh) rotate(360deg);  opacity: 0.85; }
     }
-    /* Floating balloons rising behind content */
-    .celebrate .balloon {
-      top: auto; bottom: -16%;
-      width: 26px; height: 32px;
-      border-radius: 50% / 55% 55% 45% 45%;
-      animation-name: balloon-rise;
-      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
-    }
-    .celebrate .balloon::after {
-      content: ''; position: absolute; left: 50%; top: 100%;
-      width: 1px; height: 13px; background: rgba(255,255,255,0.28);
-      transform: translateX(-50%);
-    }
-    @keyframes balloon-rise {
-      0%   { transform: translateY(0) rotate(-4deg);     opacity: 0; }
-      10%  { opacity: 0.9; }
-      50%  { transform: translateY(-55vh) rotate(4deg);  }
-      100% { transform: translateY(-120vh) rotate(-4deg); opacity: 0.85; }
-    }
-
     /* keep entry content above the confetti */
     .entry-center > *:not(.celebrate) { position: relative; z-index: 1; }
     @media (prefers-reduced-motion: reduce) { .celebrate { display: none; } }
@@ -848,10 +828,9 @@
     document.body.style.overflow = '';
   }
 
-  // ── Birthday confetti + balloons (decorative only) ───
+  // ── Birthday confetti (decorative only) ─────────────
   (function spawnConfetti() {
     var emojis  = ['🎉','🎂','🎈','✨','🎊','🥳','🍵','🍃'];
-    var greens  = ['#7cb342','#9ccc65','#aed581','#558b2f','#c5e1a5'];
     var c = document.getElementById('celebrate');
     if (!c) return;
     // Falling emoji confetti
@@ -864,17 +843,6 @@
       s.style.animationDuration = dur + 's';
       s.style.animationDelay = (-Math.random() * dur) + 's';  // start mid-fall
       c.appendChild(s);
-    }
-    // Rising matcha-green balloons
-    for (var b = 0; b < 6; b++) {
-      var bal = document.createElement('span');
-      bal.className = 'balloon';
-      bal.style.left = (5 + Math.random() * 90) + '%';
-      bal.style.background = greens[Math.floor(Math.random() * greens.length)];
-      var bdur = 11 + Math.random() * 8;
-      bal.style.animationDuration = bdur + 's';
-      bal.style.animationDelay = (-Math.random() * bdur) + 's';
-      c.appendChild(bal);
     }
   })();
 
