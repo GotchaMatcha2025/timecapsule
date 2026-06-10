@@ -99,12 +99,17 @@
     .center  { text-align: center; align-items: center; }
     .spacer  { flex: 1; }
 
-    /* Centered entry screen */
-    .entry-center { justify-content: center; text-align: center; }
+    /* Entry screen — top-aligned reading flow */
+    .entry-center { justify-content: flex-start; text-align: center; padding-top: 44px; }
     .entry-center .spacer { display: none; }
     .entry-center input { text-align: center; }
-    .entry-center h1 { margin-top: 8px; }
-    .entry-center .btn-primary { margin-top: 12px; }
+    .entry-center h1 { margin-top: 4px; margin-bottom: 18px; }
+    .story { margin-bottom: 20px; }
+    .story p { color: #9a9a9a; font-size: 0.9rem; line-height: 1.65; margin-bottom: 13px; }
+    .story p:last-child { margin-bottom: 0; }
+    .story .emph { color: #f0f0f0; font-weight: 600; }
+    .signoff { color: #c0392b; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; margin: 0 0 26px; }
+    .entry-center .btn-primary { margin-top: 4px; }
     .icon    { font-size: 3.5rem; margin-bottom: 16px; }
 
     .upload-track { width: 200px; height: 2px; background: rgba(255,255,255,0.12); border-radius: 1px; overflow: hidden; margin: 20px auto 0; }
@@ -171,8 +176,13 @@
 
 <!-- ── Screen 1: Entry ──────────────────────────────── -->
 <div id="s-entry" class="screen active entry-center">
-  <h1>Gotcha turns 1 🎉</h1>
-  <p class="sub">A year of imperfections led us to this community and growth — and this birthday is yours too, because you built Gotcha. Record a message to cheer on your future self, and we'll mail it back a year later with a surprise.</p>
+  <h1>We turned one! 🎉</h1>
+  <div class="story">
+    <p>We realised we're imperfect — just like this pop-up that looks a little DIY, a little messy, a little unfinished. But hey, that's us. And honestly, that's life.</p>
+    <p>It's these imperfect moments that shaped us into who we are today, and gave us the chance to find something we're deeply grateful for: a wholesome community of people like you.</p>
+    <p>Record a message to your future self to cheer them on, and remind them to celebrate and embrace life's beautiful imperfections. <span class="emph">We'll mail it back to you in a year with a little surprise!</span></p>
+  </div>
+  <div class="signoff">We Gotcha.</div>
   <input type="text"  id="name"  placeholder="Your name"  autocomplete="name">
   <input type="email" id="email" placeholder="Your email" autocomplete="email" inputmode="email">
   <div class="spacer"></div>
