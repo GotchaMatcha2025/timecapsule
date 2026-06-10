@@ -398,13 +398,11 @@
     btn.disabled = true;
     btn.textContent = 'Checking…';
 
-    sb.from('capsules')
-      .select('email', { count: 'exact', head: true })
-      .eq('email', email.toLowerCase().trim())
+    sb.rpc('capsule_exists', { check_email: email.toLowerCase().trim() })
       .then(function(res) {
         btn.disabled = false;
         btn.textContent = 'Start Recording →';
-        if (res.count && res.count > 0) {
+        if (res.data === true) {
           var firstName = name.split(/\s+/)[0];
           document.getElementById('dup-title').textContent = 'Hey ' + firstName + ', you\'re already in.';
           document.getElementById('dup-msg').textContent   = 'Your time capsule is already sealed. Imperfection is part of the process — that\'s what makes it real.';
